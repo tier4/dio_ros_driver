@@ -1,6 +1,7 @@
 #include "ros/ros.h"
 #include "std_msgs/Bool.h"
 #include <iostream>
+#include <cstring>
 
 #include "dio_ros_driver/dio_user_handler.h"
 
@@ -11,11 +12,20 @@ int main(int argc, char **argv)
   ros::NodeHandle nh;
   ros::NodeHandle pnh("~");
 
-  // set param for threshold to detec DI pressed.
+  // set param
+  // threshold to detect DI pressed.
   double pressing_period_threshold;
-  pnh.param<double>(
-    "pressing_period_threshold", pressing_period_threshold, 1.0);
-
+  pnh.param<double>("pressing_period_threshold",
+                    pressing_period_threshold, 1.0);
+  // chipname
+  std::string chip_name;
+  pnh.param<std::string>("chip_name",
+                         chip_name, "gpiochip0");
+  // line offset
+  int line_offset;
+  pnh.param<int>("line_offset",
+                 line_offset, (int)0);
+  
   // set publisher
   // startbutton is directed to Autoware.
   ros::Publisher button_pub =
@@ -24,14 +34,12 @@ int main(int argc, char **argv)
   ros::Publisher button_raw_pub =
     pnh.advertise<std_msgs::Bool>("startbutton_raw", 10);
 
-  if (!init_di())
+  if (!init_di(chip_name.c_str(), line_offset))
     {
       std::cerr << "init_di cannot <-- ERROR\n" << std::endl;
       return -1;
     }
 
-  // target di line number.
-  constexpr uint32_t target_di_line_number = 0;
   // handling button pushed.
   constexpr double sleep_sec = 0.02;
   ros::Rate loop_rate(1.0 / sleep_sec);
@@ -40,7 +48,7 @@ int main(int argc, char **argv)
   while (ros::ok())
   {
     const bool is_pressed =
-      static_cast<bool>(read_di_line(target_di_line_number));
+      static_cast<bool>(read_di_line());
     pressed_count = (is_pressed) ? pressed_count + 1 : 0;
     const double pressing_period = pressed_count * sleep_sec;
 
