@@ -1,0 +1,7 @@
+<launch>
+  <arg name="pressing_period_threshold" default="1.0"/>
+  
+  <node name="dio_ros_driver" type="dio_ros_driver_node" pkg="dio_ros_driver">
+    <param name="pressing_period_threshold" type="double" value="$(arg pressing_period_threshold)"/>
+  </node>
+</launch>

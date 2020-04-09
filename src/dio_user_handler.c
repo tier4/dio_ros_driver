@@ -92,22 +92,21 @@ uint32_t reset_di(void) {
  * @return: the status(TRUE or FALSE) of the specified DI channel.
  */ 
 uint32_t read_di_line(uint32_t ch) {
-  // return 0 if accessing out-of-range.
-  struct gpiod_line *target_di_line;
-  sint32_t target_line_value;
+  sint32_t di_value_array[DI_PORT_NUM];
+  sint32_t ret_val_gpiod_func;
   
+  // return 0 if accessing out-of-range.
   if (ch >= DI_PORT_NUM ) {
     return 0;
   }
 
-  // read port with gpiod_line_get_value.
-  target_di_line = gpiod_line_bulk_get_line(&DI_LINES_BULK, ch);
-  target_line_value = gpiod_line_get_value(target_di_line);
-  if (target_line_value == -1) {
+  ret_val_gpiod_func = gpiod_line_get_value_bulk(&DI_LINES_BULK, di_value_array);
+
+  if (ret_val_gpiod_func == -1) {
     return 0;
-  } else {
-    return target_line_value;
   }
+
+  return di_value_array[ch];
 }
 
 /*
@@ -119,7 +118,7 @@ uint32_t read_di_line(uint32_t ch) {
 uint32_t read_all_di_lines(void){
   sint32_t di_value_array[DI_PORT_NUM];
   sint32_t ret_val_gpiod_func;
-  uint32_t di_port_value;
+  uint32_t di_port_value = 0;
   uint32_t i;
   
   ret_val_gpiod_func = gpiod_line_get_value_bulk(&DI_LINES_BULK, di_value_array);
@@ -129,7 +128,7 @@ uint32_t read_all_di_lines(void){
   }
   // make integer-type return value from array.
   for (i = 0; i < DI_PORT_NUM; i++) {
-    di_port_value = di_value_array[i] << i;
+    di_port_value |= ((0x01 & di_value_array[i]) << i);
   }
   return di_port_value;
 }
