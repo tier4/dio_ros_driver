@@ -25,6 +25,10 @@ int main(int argc, char **argv)
   int line_offset;
   pnh.param<int>("line_offset",
                  line_offset, 0);
+
+  bool di_active_low;
+  pnh.param<bool>("di_active_low",
+                  di_active_low, false);
   
   // set publisher
   // startbutton is directed to Autoware.
@@ -45,21 +49,24 @@ int main(int argc, char **argv)
   constexpr double sleep_sec = 0.02;
   ros::Rate loop_rate(1.0 / sleep_sec);
   uint32_t pressed_count = 0;
-  std_msgs::Bool msg;
+  std_msgs::Bool startbutton_raw_msg;
+  std_msgs::Bool startbutton_msg;
   while (ros::ok())
   {
-    const bool is_pressed =
-      static_cast<bool>(read_di_line());
+    const bool di_line_value = static_cast<bool>(read_di_line());
+    const bool is_pressed = (di_active_low == true) ? !di_line_value
+                                                     : di_line_value;
     pressed_count = (is_pressed) ? pressed_count + 1 : 0;
     const double pressing_period = pressed_count * sleep_sec;
 
-    msg.data = is_pressed;
+    startbutton_raw_msg.data = di_line_value;
+    startbutton_msg.data = is_pressed;
 
     // publish topics of button(DI) pushed.
-    button_raw_pub.publish(msg);
+    button_raw_pub.publish(startbutton_raw_msg);
     if (pressing_period > pressing_period_threshold)
     {
-      button_pub.publish(msg);
+      button_pub.publish(startbutton_msg);
     }
     loop_rate.sleep();
   }

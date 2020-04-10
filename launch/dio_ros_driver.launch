@@ -2,11 +2,12 @@
   <arg name="pressing_period_threshold" default="1.0"/>
   <arg name="chip_name" default="gpiochip0"/>
   <arg name="line_offset" default="0"/>
+  <arg name="di_active_low" default="false"/>
   
   <node name="dio_ros_driver" type="dio_ros_driver_node" pkg="dio_ros_driver">
     <param name="pressing_period_threshold" type="double" value="$(arg pressing_period_threshold)"/>
     <param name="chip_name" type="string" value="$(arg chip_name)"/>
     <param name="line_offset" type="int" value="$(arg line_offset)"/>
-
+    <param name="di_active_low" type="bool" value="$(arg di_active_low)"/>
   </node>
 </launch>
