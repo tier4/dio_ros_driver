@@ -1,12 +1,21 @@
-#include "ros/ros.h"
-#include "std_msgs/Bool.h"
+/*
+  Copyright (c) 2020 TierIV.
+  Package: dio_ros_dirver
+  File Name: dio_ros_dirver.cpp
+  Author: Takayuki AKAMINE
+  Description: ROS driver for DI module.
+               This driver sends DI value topic.
+ */
 #include <iostream>
 #include <cstring>
 
+#include "ros/ros.h"
+#include "std_msgs/Bool.h"
+
 #include "dio_ros_driver/dio_user_handler.h"
 
-int main(int argc, char **argv)
-{
+
+int main(int argc, char **argv) {
   ros::init(argc, argv, "dio_ros_driver");
 
   ros::NodeHandle nh;
@@ -29,7 +38,7 @@ int main(int argc, char **argv)
   bool di_active_low;
   pnh.param<bool>("di_active_low",
                   di_active_low, false);
-  
+
   // set publisher
   // startbutton is directed to Autoware.
   ros::Publisher button_pub =
@@ -39,11 +48,10 @@ int main(int argc, char **argv)
     pnh.advertise<std_msgs::Bool>("startbutton_raw", 10);
 
   if (!init_di(chip_name.c_str(),
-               static_cast<unsigned int>(line_offset)))
-    {
+               static_cast<unsigned int>(line_offset))) {
       std::cerr << "init_di cannot <-- ERROR\n" << std::endl;
       return -1;
-    }
+  }
 
   // handling button pushed.
   constexpr double sleep_sec = 0.02;
@@ -51,8 +59,7 @@ int main(int argc, char **argv)
   uint32_t pressed_count = 0;
   std_msgs::Bool startbutton_raw_msg;
   std_msgs::Bool startbutton_msg;
-  while (ros::ok())
-  {
+  while (ros::ok()) {
     const bool di_line_value = static_cast<bool>(read_di_line());
     const bool is_pressed = (di_active_low == true) ? !di_line_value
                                                      : di_line_value;
@@ -64,8 +71,7 @@ int main(int argc, char **argv)
 
     // publish topics of button(DI) pushed.
     button_raw_pub.publish(startbutton_raw_msg);
-    if (pressing_period > pressing_period_threshold)
-    {
+    if (pressing_period > pressing_period_threshold) {
       button_pub.publish(startbutton_msg);
     }
     loop_rate.sleep();

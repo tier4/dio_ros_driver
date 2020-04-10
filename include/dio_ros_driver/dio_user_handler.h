@@ -1,13 +1,13 @@
 /*
   Copyright (c) 2020 TierIV.
   Package: dio_ros_dirver
-  File Name: dio_ros_dirver.hpp
+  File Name: dio_user_handler.h
   Author: Takayuki AKAMINE
   Description: Header file for dio_user_handler.c
  */
 
-#ifndef __DIO_USER_HANDLER__
-#define __DIO_USER_HANDLER__
+#ifndef INCLUDE_DIO_ROS_DRIVER_DIO_USER_HANDLER_H_
+#define INCLUDE_DIO_ROS_DRIVER_DIO_USER_HANDLER_H_
 
 
 #ifdef __cplusplus
@@ -43,4 +43,4 @@ uint32_t read_di_line(void);
 }
 #endif
 
-#endif
+#endif  // INCLUDE_DIO_ROS_DRIVER_DIO_USER_HANDLER_H_

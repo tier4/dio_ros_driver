@@ -1,9 +1,9 @@
 /*
   Copyright (c) 2020 TierIV.
   Package: dio_ros_dirver
-  File Name: dio_ros_dirver.hpp
+  File Name: dio_user_handler.c
   Author: Takayuki AKAMINE
-  Description: 
+  Description: Wrapper module for libgpiod.
  */
 
 
@@ -29,13 +29,12 @@ static struct gpiod_line *DI_LINE;
  *  if true (1), the initialization is succeeded.
  *  if false(0), the initialization is failed.
  */
-uint32_t init_di(const char* chip_name, const uint32_t line_offset){
-
+uint32_t init_di(const char* chip_name, const uint32_t line_offset) {
   // open DI chip.
   DI_CHIP = gpiod_chip_open_by_name(chip_name);
   if (DI_CHIP == NULL) {
     fprintf(stderr, "Cannot open %s\n", chip_name);
-    return 0; // failed
+    return 0;  // failed
   }
 
   // get DI Line(Port) from DI Chip.
@@ -43,16 +42,16 @@ uint32_t init_di(const char* chip_name, const uint32_t line_offset){
   if (DI_LINE == NULL) {
     fprintf(stderr, "Cannot get %d line of %s\n", line_offset, chip_name);
     gpiod_chip_close(DI_CHIP);
-    return 0; // failed.
+    return 0;  // failed.
   }
 
   // set all lines as input ports.
   if (gpiod_line_request_input(DI_LINE, DI_MODNAME) != 0) {
     gpiod_chip_close(DI_CHIP);
     fprintf(stderr, "Cannot execute request bulk on %s\n", chip_name);
-    return 0; // failure.
+    return 0;  // failure.
   }
-  return 1; // succeeded.
+  return 1;  // succeeded.
 }
 
 /*
@@ -68,9 +67,9 @@ uint32_t reset_di(void) {
   // close DI chip.
   if (DI_CHIP != NULL) {
     gpiod_chip_close(DI_CHIP);
-    return 1; // succeeded.
+    return 1;  // succeeded.
   } else {
-    return 0; // failed (not opened anyway).
+    return 0;  // failed (not opened anyway).
   }
 }
 
