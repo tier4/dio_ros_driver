@@ -30,7 +30,6 @@ static struct gpiod_line *DI_LINE;
  *  if false(0), the initialization is failed.
  */
 uint32_t init_di(const char* chip_name, const uint32_t line_offset){
-  uint32_t i = 0;
 
   // open DI chip.
   DI_CHIP = gpiod_chip_open_by_name(chip_name);

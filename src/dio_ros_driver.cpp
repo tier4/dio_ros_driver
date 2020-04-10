@@ -24,7 +24,7 @@ int main(int argc, char **argv)
   // line offset
   int line_offset;
   pnh.param<int>("line_offset",
-                 line_offset, (int)0);
+                 line_offset, 0);
   
   // set publisher
   // startbutton is directed to Autoware.
@@ -34,7 +34,8 @@ int main(int argc, char **argv)
   ros::Publisher button_raw_pub =
     pnh.advertise<std_msgs::Bool>("startbutton_raw", 10);
 
-  if (!init_di(chip_name.c_str(), line_offset))
+  if (!init_di(chip_name.c_str(),
+               static_cast<unsigned int>(line_offset)))
     {
       std::cerr << "init_di cannot <-- ERROR\n" << std::endl;
       return -1;
