@@ -20,7 +20,7 @@ You can observe `/startbutton` topic. `/startbutton` is boolean data to show tha
 * `line_offset`: to select GPIO line from selected `gpiochip[0-9]`
 * `di_active_low`: if true, DI line is active low
 
-## Topcs
+## Topics
 * `/dio_ros_driver/startbutton_raw`: raw DI value from libgpiod
 * `/startbutton`: detection of startbutton pushed
 
