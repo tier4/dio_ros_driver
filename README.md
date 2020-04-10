@@ -15,6 +15,16 @@ After executing this command, `dio_ros_driver_node` will run.
 You can observe `/startbutton` topic. `/startbutton` is boolean data to show that selected button is pushed.
 
 
+## Arguments
+* `chip_name`: to select `gpiodchip[0-9]` in `/dev` directory
+* `line_offset`: to select GPIO line from selected `gpiochip[0-9]`
+* `di_active_low`: if true, DI line is active low
+
+## Topcs
+* `/dio_ros_driver/startbutton_raw`: raw DI value from libgpiod
+* `/startbutton`: detection of startbutton pushed
+
+
 # Prerequisite
 System configuration:
 * OS: Ubuntu18.04
