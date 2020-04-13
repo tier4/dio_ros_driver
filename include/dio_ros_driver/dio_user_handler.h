@@ -19,22 +19,25 @@ typedef unsigned int   uint32_t;
 typedef signed int     sint32_t;
 
 /*
- * @brief: Initialize DIO module.
- * @param[in]: Nan(void)
- * @return: flag indicating DIO initialized.
+ * @brief: Initialize DI line.
+ * @param[in]: chip_name, string for selecting gpiochip.
+ *             line_offset, integer for selecting DI line.
+ * @return: flag indicating DI initialized.
+ *  if true (1), the initialization is succeeded.
+ *  if false(0), the initialization is failed.
  */
 uint32_t init_di(const char* chip_name, const uint32_t line_offset);
 
 /*
- * @brief: Reset all DIO module.
- * @param[in]: Nan(void)
- * @return: flag indicating DIO reset.
+ * @brief: Reset DI line.
+ * @param[in]: Nan(void).
+ * @return: flag indicating DI reset.
  */
 uint32_t reset_di(void);
 
 /*
  * @brief: Read a single channel of digital input.
- * @param[int]: ch (value specifies the DI channel to read.)
+ * @param[void]: Nan(void).
  * @return: the status(1 or 0) of the specified DI channel.
  */ 
 uint32_t read_di_line(void);
