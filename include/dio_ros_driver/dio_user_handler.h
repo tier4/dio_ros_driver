@@ -1,9 +1,25 @@
 /*
-  Copyright (c) 2020 TierIV.
-  Package: dio_ros_dirver
-  File Name: dio_user_handler.h
-  Author: Takayuki AKAMINE
-  Description: Header file for dio_user_handler.c
+ * Copyright 2020 Tier IV, Inc. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+/*
+ * Package: dio_ros_dirver
+ * File Name: dio_user_handler.h
+ * Author: Takayuki AKAMINE
+ * Description: Header file for dio_user_handler.c
  */
 
 #ifndef INCLUDE_DIO_ROS_DRIVER_DIO_USER_HANDLER_H_
