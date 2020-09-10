@@ -8,23 +8,41 @@ find_package(catkin REQUIRED COMPONENTS
   roslint
   roscpp
   std_msgs
+  message_generation
+)
+find_package(Boost REQUIRED
+  COMPONENTS system
 )
 
-catkin_package()
 
 include_directories(
   ${catkin_INCLUDE_DIRS}
   include
  )
 
+
+add_message_files(
+  FILES
+  DIOPort.msg
+  DIOStatus.msg
+)
+
+generate_messages (
+  DEPENDENCIES
+  std_msgs
+)
+catkin_package()
+
 set(SOURCE_FILES src/dio_ros_driver_node.cpp
                  src/dio_ros_driver.cpp
-                 src/dio_user_handler.c)
+                 src/dio_accessor_base.cpp
+                 src/din_accessor.cpp
+                 src/dout_accessor.cpp)
 add_executable(${PROJECT_NAME}_node ${SOURCE_FILES})
 
 add_dependencies(${PROJECT_NAME}_node
-  ${${PROJECT_NAME}_EXPORTED_TARGETS}
-  ${catkin_EXPORTED_TARGETS}
+ ${${PROJECT_NAME}_EXPORTED_TARGETS}
+ ${catkin_EXPORTED_TARGETS}
 )
 
 target_link_libraries(${PROJECT_NAME}_node
@@ -41,6 +59,13 @@ install(TARGETS ${PROJECT_NAME}_node
 install(
   DIRECTORY launch/
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+  PATTERN ".svn" EXCLUDE
+  PATTERN ".git" EXCLUDE
+)
+
+install (
+  DIRECTORY config/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/config
   PATTERN ".svn" EXCLUDE
   PATTERN ".git" EXCLUDE
 )

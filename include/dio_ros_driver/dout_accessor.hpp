@@ -15,29 +15,35 @@
  */
 
 /*
- * Package: dio_ros_dirver
- * File Name: dio_ros_dirver.cpp
+ * Package: dio_ros_driver
+ * File Name: dout_accessor.hpp
  * Author: Takayuki AKAMINE
- * Description: ROS driver for DI module.
- *              This driver sends DI value topic.
+ * Description: Header file for dio_ros_driver
  */
 
-#include "ros/ros.h"
+#ifndef __DOUT_ACCESSOR_HPP__
+#define __DOUT_ACCESSOR_HPP__
 
-#include "dio_ros_driver/dio_ros_driver.hpp"
+#include "dio_accessor_base.hpp"
 
-int main(int argc, char **argv)
+extern "C"
 {
-  ros::init(argc, argv, "dio_ros_driver");
-
-  ros::NodeHandle nh;
-  ros::NodeHandle pnh("~");
-
-  std::shared_ptr<dio_ros_driver::DIO_ROSDriver> dio_ros_driver;
-  dio_ros_driver = std::make_shared<dio_ros_driver::DIO_ROSDriver>(nh, pnh);
-
-  dio_ros_driver->init();
-  dio_ros_driver->run();
-
-  return 0;
+#include <gpiod.h>
 }
+#include <cstdint>
+
+namespace dio_ros_driver
+{
+  class DOUTAccessor : public DIO_AccessorBase
+  {
+  public:
+    DOUTAccessor(gpiod_chip *const dio_chip_descriptor);
+    ~DOUTAccessor();
+    int32_t writePort(const uint16_t &port_id, const bool &port_value) override;
+
+  private:
+    int32_t setDirection(const dio_port_descriptor &port) override;
+  };
+} // namespace dio_ros_driver
+
+#endif
