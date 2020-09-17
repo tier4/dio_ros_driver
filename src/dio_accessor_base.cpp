@@ -27,31 +27,23 @@
 
 namespace dio_ros_driver
 {
-  DIO_AccessorBase::DIO_AccessorBase(gpiod_chip *const dio_chip_descriptor)
-      : dio_chip_descriptor_(dio_chip_descriptor),
-        dio_port_num_(0)
+  DIO_AccessorBase::DIO_AccessorBase(void)
+      : dio_chip_descriptor_(NULL),
+        dio_port_num_(0),
+        dio_ports_set(),
+        dio_status_()
   {
-    if (dio_chip_descriptor == NULL)
-    {
-      dio_status_.status_ = static_cast<uint16_t>(0x00FF);
-      dio_status_.status_ |= static_cast<uint16_t>(NOT_OPEN_DIOCHIP << 8);
-    }
-    else
-    {
-      dio_status_.status_ = (static_cast<uint16_t>(NO_DIO_ERROR) << 8) | 0x0000;
-    }
+    setErrorCode(0xFFFF, NOT_OPEN_DIOCHIP);
   }
 
-  void DIO_AccessorBase::setErrorCode(const uint16_t &port_id, const ERROR_CODE &error_code)
+  void DIO_AccessorBase::setDIOChip(gpiod_chip *const dio_chip_descriptor)
   {
-    // set error port
-    dio_status_.status_ = static_cast<uint16_t>(0x0001 << port_id);
-    // set error code.
-    dio_status_.status_ |= static_cast<uint16_t>(error_code << 8);
-    return;
+    dio_chip_descriptor_ = dio_chip_descriptor;
+    if (dio_chip_descriptor != NULL)
+      setErrorCode(0x0000, NO_DIO_ERROR);
   }
 
-  bool DIO_AccessorBase::addPort(const uint16_t &port_id, const uint16_t &port_offset)
+  bool DIO_AccessorBase::addPort(const uint16_t &port_offset)
   {
     // check status.
     if (dio_status_.status_ != 0)
@@ -59,31 +51,36 @@ namespace dio_ros_driver
       return 1;
     }
     // check index value.
-    if (port_id >= MAX_PORT_NUM)
+    if (dio_port_num_ >= MAX_PORT_NUM)
     {
       std::cerr << "[dio_ros_driver] addPort error due to illegal index access." << std::endl;
       return 1;
     }
-    // get line descriptor from gpiochip
-    dio_ports_set[port_id].port_offset_ = port_offset;
-    dio_ports_set[port_id].dio_line_ = gpiod_chip_get_line(dio_chip_descriptor_, port_offset);
-    if (dio_ports_set[port_id].dio_line_ == NULL)
+    // get line descriptor from gpiochip.
+    dio_ports_set[dio_port_num_].port_offset_ = port_offset;
+    dio_ports_set[dio_port_num_].dio_line_ = gpiod_chip_get_line(dio_chip_descriptor_, port_offset);
+    if (dio_ports_set[dio_port_num_].dio_line_ == NULL)
     {
       std::cerr << "[dio_ros_driver] cannot get line #" << port_offset << std::endl;
-      setErrorCode(port_id, NOT_GET_LINE);
+      setErrorCode((0x0001 << dio_port_num_), NOT_GET_LINE);
       return 1;
     }
-    // set direction to descriptor
-    if (setDirection(dio_ports_set[port_id]) != 0)
+    // set direction to descriptor.
+    if (setDirection(dio_ports_set[dio_port_num_]) != 0)
     {
       std::cerr << "[dio_ros_driver] cannot set direction #" << port_offset << std::endl;
-      setErrorCode(port_id, NOT_SET_LINE_DIRECTION);
+      setErrorCode((0x0001 << dio_port_num_), NOT_SET_LINE_DIRECTION);
       return 1;
     }
-    // add line to bulk;
+    // succeeded and increment registered port number.
     dio_port_num_++;
 
     return 0;
+  }
+
+  uint32_t DIO_AccessorBase::getNumOfPorts(void)
+  {
+    return dio_port_num_;
   }
 
   int32_t DIO_AccessorBase::readPort(const uint16_t &port_id)
@@ -92,7 +89,7 @@ namespace dio_ros_driver
     din_value = gpiod_line_get_value(dio_ports_set[port_id].dio_line_);
     if (din_value < 0)
     {
-      setErrorCode(port_id, NOT_GET_LINE_VALUE);
+      setErrorCode((0x0001 << port_id), NOT_GET_LINE_VALUE);
     }
     return din_value;
   }
@@ -119,6 +116,15 @@ namespace dio_ros_driver
       dio_status_.value_ |= (static_cast<uint16_t>(read_value) << i);
     }
     return dio_status_;
+  }
+
+  void DIO_AccessorBase::setErrorCode(const uint16_t &port_bitmap, const ERROR_CODE &error_code)
+  {
+    // set error port
+    dio_status_.status_ = port_bitmap;
+    // set error code.
+    dio_status_.status_ |= static_cast<uint16_t>(error_code << 8);
+    return;
   }
 
 } // namespace dio_ros_driver

@@ -2,27 +2,62 @@
 ROS Driver for accessing DIO with Linux-based manner
 
 # Overvew
-In the golf-cart project, usage of DIO is required.  
-This system serves DIO ROS driver for a single port.
+In the golf-cart project, DIO module is used for several purpose.  
+This system serves DIO ROS driver for at most 8 ports.
 
-You can choose gpio chip and gpio line with giving arguments as below. 
+`dio_ros_driver` sends topics which includes boolean value read from corresponding DI port.
+It receives topics which includes boolean value and write DO port.
+Topics are allocated to respective port.
 
+
+## Behavior
 ```
-$ roslaunch dio_ros_driver dio_ros_driver.launch chip_name:="gpiochip0" line_offset:=32
+$ roslaunch dio_ros_driver dio_ros_driver.launch chip_name:="gpiochip0" access_frequency:=10.0
 ```
 
-After executing this command, `dio_ros_driver_node` will run.
+After executing this command, `dio_ros_driver_node` will run without any message.
 You can observe `/startbutton` topic. `/startbutton` is boolean data to show that selected button is pushed.
 
 
 ## Arguments
 * `chip_name`: to select `gpiodchip[0-9]` in `/dev` directory
-* `line_offset`: to select GPIO line from selected `gpiochip[0-9]`
-* `di_active_low`: if true, DI line is active low
+* `din_default_value`: initial boolean value for DI ports, in other words, this signal decides active low or not. (default: false, if this value is true, active low is enabled.)
+* `dout_default_value`: initial boolean value for DO ports
+* `access_frequency`: access frequency (default: )
 
 ## Topics
-* `/dio_ros_driver/startbutton_raw`: raw DI value from libgpiod
-* `/startbutton`: detection of startbutton pushed
+* `/dio/din[0-7]`: Boolean value read from DI ports
+* `/dio/din_status`: Status and all ports' value from DI ports
+* `/dio/dout[0-7]`: Boolean value written into DO ports 
+* `/dio/dout_status`: Status and all ports' value from DO ports
+
+
+## Config file
+In [`port_list.yaml`](./msg/port_list.yaml), port offset is listed as below.
+
+```
+din_ports:
+  - 72
+  - 73
+  - 74
+  - 75
+  - 76
+  - 77
+  - 78
+  - 79
+
+dout_ports:
+  - 105
+  - 106
+  - 107
+  - 108
+  - 109
+  - 110
+  - 111
+  - 112
+```
+
+Each offset is assigned to ordering number. This `port_list.yaml` indicates that 0th DI port is corresponded to 72th offset of the DI module.  
 
 
 # Prerequisite

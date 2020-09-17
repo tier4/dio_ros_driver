@@ -26,7 +26,7 @@
 
 namespace dio_ros_driver
 {
-  DOUTAccessor::DOUTAccessor(gpiod_chip *const dio_chip_descriptor) : DIO_AccessorBase(dio_chip_descriptor)
+  DOUTAccessor::DOUTAccessor() : DIO_AccessorBase()
   {
   }
 
@@ -35,7 +35,7 @@ namespace dio_ros_driver
 
     if (gpiod_line_set_value(dio_ports_set[port_id].dio_line_, (int)port_value) != 0)
     {
-      setErrorCode(port_id, NOT_SET_LINE_VALUE);
+      setErrorCode((0x0001 << port_id), NOT_SET_LINE_VALUE);
       return -1;
     }
     return 0;

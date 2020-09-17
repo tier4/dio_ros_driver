@@ -37,8 +37,8 @@ namespace dio_ros_driver
   class DOUTAccessor : public DIO_AccessorBase
   {
   public:
-    DOUTAccessor(gpiod_chip *const dio_chip_descriptor);
-    ~DOUTAccessor();
+    DOUTAccessor();
+    ~DOUTAccessor() {}
     int32_t writePort(const uint16_t &port_id, const bool &port_value) override;
 
   private:

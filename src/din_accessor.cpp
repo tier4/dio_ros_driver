@@ -26,7 +26,7 @@
 
 namespace dio_ros_driver
 {
-  DINAccessor::DINAccessor(gpiod_chip *const dio_chip_descriptor) : DIO_AccessorBase(dio_chip_descriptor)
+  DINAccessor::DINAccessor(void) : DIO_AccessorBase()
   {
   }
 

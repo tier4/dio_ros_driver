@@ -48,45 +48,42 @@ namespace dio_ros_driver
   {
   public:
     DIO_ROSDriver(const ros::NodeHandle &nh, const ros::NodeHandle &pnh);
-    ~DIO_ROSDriver()
-    {
-    }
+    ~DIO_ROSDriver() {}
 
-    int init(void); // !<@brief DIO Accessor Initialization
-    void run(void);
+    int init(void); // !<@brief DIO Accessor Initialization.
+    void run(void); // !<@brief Body of this node.
 
   private:
     // callbacks
+    void initAccessor(const std::string param_name, DIO_AccessorBase &dio_accessor);
+    void requestUserWrite(const dio_ros_driver::DIOPort::ConstPtr &dout_topic, const uint32_t &port_id);
     void readDINPorts(void);
     void writeDOUTPorts(void);
-    void requestUserWrite(const dio_ros_driver::DIOPort::ConstPtr &dout_topic, const uint32_t &port_id);
+    void updateStatus(const DIO_AccessorBase &dio_accessor);
 
-    // Node handler
+    // Node handler.
     ros::NodeHandle nh_;  //!< @brief ros node handle
     ros::NodeHandle pnh_; //!< @brief ros node handle
 
     // Publisher and subscribers.
     std::array<ros::Publisher, MAX_PORT_NUM> din_port_publisher_array_;    //!< @brief ros publisher array
     std::array<ros::Subscriber, MAX_PORT_NUM> dout_port_subscriber_array_; //!< @brief ros publisher array
-    ros::Publisher din_status_publisher_;
-    ros::Publisher dout_status_publisher_;
+    ros::Publisher din_status_publisher_;                                  //!< @brief din status message publisher
+    ros::Publisher dout_status_publisher_;                                 //!< @brief dout status status message publisher
 
-    // Access handler
-    DINAccessor *din_accessor_;
-    DOUTAccessor *dout_accessor_;
+    // Access handler.
+    DINAccessor din_accessor_;   //!< @brief DIN Accessor.
+    DOUTAccessor dout_accessor_; //!< @brief DOUT Accessor.
 
     // Variables for parametr.
     double access_frequency_; //!< @brief pressing period.
-    std::string chip_name_;   // !<@brief DIO Chip Name
-    bool active_low_;         // !<@brief Active Low Enabler.
+    std::string chip_name_;   //!<@brief DIO Chip Name
+    bool active_low_;         //!<@brief Active Low Enabler.
 
     // variable for sharing between callbacks
-    std::mutex write_update_mutex_;
-    std::array<dout_update, MAX_PORT_NUM> dout_user_update_;
-    gpiod_chip *dio_chip_;
-
-    std::vector<int32_t> din_offset_array_;
-    std::vector<int32_t> dout_offset_array_;
+    std::mutex write_update_mutex_;                          //!<@brief mutex.
+    std::array<dout_update, MAX_PORT_NUM> dout_user_update_; //!<@brief update list.
+    gpiod_chip *dio_chip_;                                   //!<@brief chip descriptor
   };
 } // namespace dio_ros_driver
 

@@ -37,8 +37,8 @@ namespace dio_ros_driver
   class DINAccessor : public DIO_AccessorBase
   {
   public:
-    DINAccessor(gpiod_chip *const dio_chip_descriptor);
-    ~DINAccessor();
+    DINAccessor();
+    ~DINAccessor() {}
     int32_t writePort(const uint16_t &port_id, const bool &port_value) override;
 
   private:

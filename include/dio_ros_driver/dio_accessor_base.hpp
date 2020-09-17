@@ -65,13 +65,15 @@ namespace dio_ros_driver
   class DIO_AccessorBase
   {
   public:
-    bool addPort(const uint16_t &port_id, const uint16_t &port_offset);
-    dio_status getStatus(void);
+    void setDIOChip(gpiod_chip *const dio_chip_descriptor);
+    bool addPort(const uint16_t &port_offset);
+    uint32_t getNumOfPorts(void);
     int32_t readPort(const uint16_t &port_id);
     virtual int32_t writePort(const uint16_t &port_id, const bool &port_value) = 0;
+    dio_status getStatus(void);
 
   protected:
-    DIO_AccessorBase(gpiod_chip *const dio_chip_descriptor);
+    DIO_AccessorBase(void);
     void setErrorCode(const uint16_t &port_id, const ERROR_CODE &error_code);
     virtual int32_t setDirection(const dio_port_descriptor &port) = 0;
 
