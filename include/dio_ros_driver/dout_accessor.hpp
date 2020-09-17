@@ -39,10 +39,12 @@ namespace dio_ros_driver
   public:
     DOUTAccessor();
     ~DOUTAccessor() {}
+    void initialize(gpiod_chip *const dio_chip_descriptor, const bool &dout_default_value);
     int32_t writePort(const uint16_t &port_id, const bool &port_value) override;
 
   private:
     int32_t setDirection(const dio_port_descriptor &port) override;
+    bool dout_default_value_;
   };
 } // namespace dio_ros_driver
 

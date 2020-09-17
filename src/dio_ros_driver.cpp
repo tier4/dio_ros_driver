@@ -45,7 +45,8 @@ namespace dio_ros_driver
         dout_accessor_(),
         access_frequency_(1.0),
         chip_name_("chipname0"),
-        active_low_(false),
+        din_value_inverse_(false),
+        dout_default_value_(false),
         write_update_mutex_(),
         dout_user_update_(),
         dio_chip_(NULL)
@@ -53,7 +54,8 @@ namespace dio_ros_driver
     // load general parameters.
     pnh_.param<double>("access_frequency", access_frequency_, 1.0);
     pnh_.param<std::string>("chip_name", chip_name_, "gpiochip0");
-    pnh_.param<bool>("active_low", active_low_, false);
+    pnh_.param<bool>("din_value_inverse", din_value_inverse_, false);
+    pnh_.param<bool>("dout_default_value", dout_default_value_, false);
 
     // prepare publishers
     for (uint32_t i = 0; i < MAX_PORT_NUM; i++)
@@ -77,16 +79,16 @@ namespace dio_ros_driver
   int DIO_ROSDriver::init(void)
   {
     dio_chip_ = gpiod_chip_open_by_name(chip_name_.c_str());
-    din_accessor_.setDIOChip(dio_chip_);
-    dout_accessor_.setDIOChip(dio_chip_);
+    din_accessor_.initialize(dio_chip_, din_value_inverse_);
+    dout_accessor_.initialize(dio_chip_, dout_default_value_);
 
-    initAccessor("/dio/din_ports", din_accessor_);
-    initAccessor("/dio/dout_ports", dout_accessor_);
+    addAccessorPorts("/dio/din_ports", din_accessor_);
+    addAccessorPorts("/dio/dout_ports", dout_accessor_);
 
     return 0;
   }
 
-  void DIO_ROSDriver::initAccessor(const std::string param_name, DIO_AccessorBase &dio_accessor)
+  void DIO_ROSDriver::addAccessorPorts(const std::string param_name, DIO_AccessorBase &dio_accessor)
   {
     // get port number array.
     std::vector<int32_t> offset_array;
@@ -145,7 +147,7 @@ namespace dio_ros_driver
   {
     int32_t read_value;
     dio_ros_driver::DIOPort din_port;
-    for (uint32_t i = 0; i < MAX_PORT_NUM; i++)
+    for (uint32_t i = 0; i < din_accessor_.getNumOfPorts(); i++)
     {
       read_value = din_accessor_.readPort(i);
       if (read_value < 0)
@@ -163,7 +165,7 @@ namespace dio_ros_driver
   void DIO_ROSDriver::writeDOUTPorts(void)
   {
     write_update_mutex_.lock();
-    for (uint32_t i = 0; i < MAX_PORT_NUM; i++)
+    for (uint32_t i = 0; i < dout_accessor_.getNumOfPorts(); i++)
     {
       if (dout_user_update_[i].update_ == true)
       {

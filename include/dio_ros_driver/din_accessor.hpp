@@ -39,10 +39,13 @@ namespace dio_ros_driver
   public:
     DINAccessor();
     ~DINAccessor() {}
+    void initialize(gpiod_chip *const dio_chip_descriptor, const bool &din_value_inverse);
+    int32_t readPort(const uint16_t &port_id) override;
     int32_t writePort(const uint16_t &port_id, const bool &port_value) override;
 
   private:
     int32_t setDirection(const dio_port_descriptor &port) override;
+    bool din_value_inverse_;
   };
 } // namespace dio_ros_driver
 

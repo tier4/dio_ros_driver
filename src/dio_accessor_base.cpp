@@ -36,7 +36,7 @@ namespace dio_ros_driver
     setErrorCode(0xFFFF, NOT_OPEN_DIOCHIP);
   }
 
-  void DIO_AccessorBase::setDIOChip(gpiod_chip *const dio_chip_descriptor)
+  void DIO_AccessorBase::initialize(gpiod_chip *const dio_chip_descriptor)
   {
     dio_chip_descriptor_ = dio_chip_descriptor;
     if (dio_chip_descriptor != NULL)

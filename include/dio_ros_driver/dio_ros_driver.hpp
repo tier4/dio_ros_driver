@@ -55,7 +55,7 @@ namespace dio_ros_driver
 
   private:
     // callbacks
-    void initAccessor(const std::string param_name, DIO_AccessorBase &dio_accessor);
+    void addAccessorPorts(const std::string param_name, DIO_AccessorBase &dio_accessor);
     void requestUserWrite(const dio_ros_driver::DIOPort::ConstPtr &dout_topic, const uint32_t &port_id);
     void readDINPorts(void);
     void writeDOUTPorts(void);
@@ -76,9 +76,10 @@ namespace dio_ros_driver
     DOUTAccessor dout_accessor_; //!< @brief DOUT Accessor.
 
     // Variables for parametr.
-    double access_frequency_; //!< @brief pressing period.
+    double access_frequency_; //!<@brief pressing period.
     std::string chip_name_;   //!<@brief DIO Chip Name
-    bool active_low_;         //!<@brief Active Low Enabler.
+    bool din_value_inverse_;  //!<@brief DIN value inverse enabler.
+    bool dout_default_value_; //!<@brief DOUT defaule value
 
     // variable for sharing between callbacks
     std::mutex write_update_mutex_;                          //!<@brief mutex.

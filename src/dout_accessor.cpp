@@ -30,6 +30,12 @@ namespace dio_ros_driver
   {
   }
 
+  void DOUTAccessor::initialize(gpiod_chip *const dio_chip_descriptor, const bool &dout_default_value)
+  {
+    DIO_AccessorBase::initialize(dio_chip_descriptor);
+    dout_default_value_ = dout_default_value;
+  }
+
   int32_t DOUTAccessor::writePort(const uint16_t &port_id, const bool &port_value)
   {
 
@@ -44,7 +50,7 @@ namespace dio_ros_driver
   int32_t DOUTAccessor::setDirection(const dio_port_descriptor &port)
   {
     std::string port_name = "/dio/dout" + std::to_string(port.port_offset_);
-    return gpiod_line_request_output(port.dio_line_, port_name.c_str(), 0);
+    return gpiod_line_request_output(port.dio_line_, port_name.c_str(), static_cast<int>(dout_default_value_));
   }
 
 } // namespace dio_ros_driver

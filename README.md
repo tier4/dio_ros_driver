@@ -21,9 +21,10 @@ You can observe `/startbutton` topic. `/startbutton` is boolean data to show tha
 
 ## Arguments
 * `chip_name`: to select `gpiodchip[0-9]` in `/dev` directory
-* `din_default_value`: initial boolean value for DI ports, in other words, this signal decides active low or not. (default: false, if this value is true, active low is enabled.)
-* `dout_default_value`: initial boolean value for DO ports
-* `access_frequency`: access frequency (default: )
+* `access_frequency`: to set access frequency (default: 10.0)
+* `din_value_inverse_enable`: to inverse raw value from DIN port. If this value is true, raw value 0 is converted into value 1 when publishing topic (default: false)
+* `dout_default_value`: initial boolean value for DO ports (default: false)
+
 
 ## Topics
 * `/dio/din[0-7]`: Boolean value read from DI ports
