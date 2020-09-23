@@ -24,6 +24,7 @@
 #include <cstring>
 #include <iostream>
 #include <boost/bind.hpp>
+#include <cstdlib>
 
 #include <dio_ros_driver/DIOPort.h>
 #include <dio_ros_driver/DIOStatus.h>
@@ -178,6 +179,53 @@ namespace dio_ros_driver
       }
     }
     write_update_mutex_.unlock();
+  }
+
+  /*
+  */
+  void DIO_ROSDriver::terminate(int signal_id)
+  {
+    ROS_INFO("Terminate process");
+    int32_t exit_status;
+    const dio_status dout_status = dout_accessor_.getStatus();
+    // any other thread cannot access dout_accessor_ object.
+    write_update_mutex_.lock();
+    // check if DIO chip opened
+    if (dio_chip_ == NULL)
+    {
+      ROS_INFO("DIO chip is not opened. This program will be closed without any DIO access");
+      exit_status = 0;
+      std::exit(exit_status);
+    }
+
+    // check if any occurs at ports
+    if (dout_accessor_.getNumOfPorts() == 0)
+    {
+      ROS_INFO("Any out port are not accessed on this program. Close DIO chip.");
+      exit_status = 0;
+      goto CLOSE_DIO_CHIP;
+    }
+
+    if (dout_status.status_ != 0)
+    {
+      ROS_ERROR("Unable to access to some failed port. Close the program immediately");
+      exit_status = -1;
+      goto CLOSE_DIO_CHIP;
+    }
+
+    if (dout_accessor_.resetAllPorts() != 0)
+    {
+      ROS_ERROR("Failed in access to any port.  Close the program immediately");
+      exit_status = -1;
+      goto CLOSE_DIO_CHIP;
+    }
+    dout_accessor_.releaseAllPorts();
+    exit_status = 0;
+
+  CLOSE_DIO_CHIP:
+    gpiod_chip_close(dio_chip_);
+
+    std::exit(exit_status);
   }
 
 } // namespace dio_ros_driver

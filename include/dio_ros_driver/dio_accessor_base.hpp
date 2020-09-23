@@ -70,6 +70,7 @@ namespace dio_ros_driver
     virtual int32_t readPort(const uint16_t &port_id);
     virtual int32_t writePort(const uint16_t &port_id, const bool &port_value) = 0;
     dio_status getStatus(void);
+    void releaseAllPorts(void);
 
   protected:
     DIO_AccessorBase(void);

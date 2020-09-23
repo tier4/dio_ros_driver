@@ -50,8 +50,9 @@ namespace dio_ros_driver
     DIO_ROSDriver(const ros::NodeHandle &nh, const ros::NodeHandle &pnh);
     ~DIO_ROSDriver() {}
 
-    int init(void); // !<@brief DIO Accessor Initialization.
-    void run(void); // !<@brief Body of this node.
+    int init(void);                // !<@brief DIO Accessor Initialization.
+    void run(void);                // !<@brief Body of this node.
+    void terminate(int singal_id); // !<@brief terminate processing.
 
   private:
     // callbacks

@@ -47,6 +47,18 @@ namespace dio_ros_driver
     return 0;
   }
 
+  int32_t DOUTAccessor::resetAllPorts(void)
+  {
+    for (uint32_t i = 0; i < getNumOfPorts(); i++)
+    {
+      if (writePort(static_cast<uint16_t>(i), dout_default_value_) == -1)
+      {
+        return -1;
+      }
+    }
+    return 0;
+  }
+
   int32_t DOUTAccessor::setDirection(const dio_port_descriptor &port)
   {
     std::string port_name = "/dio/dout" + std::to_string(port.port_offset_);

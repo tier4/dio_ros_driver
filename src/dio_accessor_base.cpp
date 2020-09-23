@@ -118,6 +118,21 @@ namespace dio_ros_driver
     return dio_status_;
   }
 
+  void DIO_AccessorBase::releaseAllPorts(void)
+  {
+    if (dio_port_num_ == 0)
+    {
+      return;
+    }
+    for (uint32_t i = 0; i < dio_port_num_; i++)
+    {
+      dio_port_descriptor &dio_port = dio_ports_set.at(i);
+      gpiod_line_release(dio_port.dio_line_);
+    }
+    dio_port_num_ = 0;
+    return;
+  }
+
   void DIO_AccessorBase::setErrorCode(const uint16_t &port_bitmap, const ERROR_CODE &error_code)
   {
     // set error port
