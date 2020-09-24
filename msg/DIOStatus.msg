@@ -13,4 +13,4 @@ uint16 status    # status has the following two fields
  		 # the corresponding bit would be 1.
  		 # if gpiochip cannot be opened, all bits would be 1.
 
-uint16 raw_value # send raw value as is.
+uint16 user_value # value sent to user as topic

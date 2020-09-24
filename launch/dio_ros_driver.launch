@@ -2,6 +2,7 @@
   <arg name="access_frequency" default="10.0" />
   <arg name="chip_name" default="gpiochip0" />
   <arg name="din_value_inverse" default="false" />
+  <arg name="dout_value_inverse" default="false" />
   <arg name="dout_default_value" default="false" />
 
   <group ns="dio">
@@ -10,6 +11,7 @@
       <param name="access_frequency" type="double" value="$(arg access_frequency)" />
       <param name="chip_name" type="string" value="$(arg chip_name)" />
       <param name="din_value_inverse" type="bool" value="$(arg din_value_inverse)" />
+      <param name="dout_value_inverse" type="bool" value="$(arg dout_value_inverse)" />
       <param name="dout_default_value" type="bool" value="$(arg dout_default_value)" />
     </node>
   </group>

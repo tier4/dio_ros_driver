@@ -47,9 +47,9 @@ namespace dio_ros_driver
   typedef struct dio_status
   {
     uint16_t status_;
-    uint16_t value_;
-    dio_status() : status_(0), value_(0) {}
-    dio_status(const uint16_t &status, const uint16_t &value) : status_(status), value_(value) {}
+    uint16_t user_value_;
+    dio_status() : status_(0), user_value_(0) {}
+    dio_status(const uint16_t &status, const uint16_t &user_value) : status_(status), user_value_(user_value) {}
   } dio_status;
 
   enum ERROR_CODE
@@ -67,14 +67,14 @@ namespace dio_ros_driver
   public:
     bool addPort(const uint16_t &port_offset);
     uint32_t getNumOfPorts(void);
-    virtual int32_t readPort(const uint16_t &port_id);
+    int32_t readPort(const uint16_t &port_id);
     virtual int32_t writePort(const uint16_t &port_id, const bool &port_value) = 0;
     dio_status getStatus(void);
     void releaseAllPorts(void);
 
   protected:
     DIO_AccessorBase(void);
-    virtual void initialize(gpiod_chip *const dio_chip_descriptor);
+    virtual void initialize(gpiod_chip *const dio_chip_descriptor, const bool &value_inverse);
     void setErrorCode(const uint16_t &port_id, const ERROR_CODE &error_code);
     virtual int32_t setDirection(const dio_port_descriptor &port) = 0;
 
@@ -82,6 +82,7 @@ namespace dio_ros_driver
     std::array<dio_port_descriptor, MAX_PORT_NUM> dio_ports_set;
     uint32_t dio_port_num_;
     dio_status dio_status_;
+    bool value_inverse_;
   };
 } // namespace dio_ros_driver
 

@@ -26,20 +26,42 @@
 
 namespace dio_ros_driver
 {
+  /**
+   * @brief DOUT Constructor
+   * Execute super class's constructor 
+   * to initialize member variables
+   */
   DOUTAccessor::DOUTAccessor() : DIO_AccessorBase()
   {
   }
 
-  void DOUTAccessor::initialize(gpiod_chip *const dio_chip_descriptor, const bool &dout_default_value)
+  /**
+   * @brief DOUT Initializer method
+   * Set DIO chip descriptor and specify the initial
+   * value of DO ports.
+   * @param dio_chip_descriptor[in] DIO chip descriptor
+   * @param dout_value_inverse[in]  Convert boolean value
+   * @param dout_default_value[in]  Initial value of DO ports
+   */
+  void DOUTAccessor::initialize(gpiod_chip *const dio_chip_descriptor, const bool &dout_value_inverse, const bool &dout_default_value)
   {
-    DIO_AccessorBase::initialize(dio_chip_descriptor);
+    DIO_AccessorBase::initialize(dio_chip_descriptor, dout_value_inverse);
     dout_default_value_ = dout_default_value;
   }
 
+  /**
+   * @brief write given value to targeted port.
+   * main function of DOUTAccessor
+   * @param[in] port_id     to specify the targeted port.
+   * @param[in] port_value  to give value.
+   * @retval 0 success in writing value to port.
+   * @retval -1 failed in writing value to port.
+   */
   int32_t DOUTAccessor::writePort(const uint16_t &port_id, const bool &port_value)
   {
+    const bool writing_value = value_inverse_ ^ port_value;
 
-    if (gpiod_line_set_value(dio_ports_set[port_id].dio_line_, (int)port_value) != 0)
+    if (gpiod_line_set_value(dio_ports_set.at(port_id).dio_line_, static_cast<int32_t>(writing_value)) != 0)
     {
       setErrorCode((0x0001 << port_id), NOT_SET_LINE_VALUE);
       return -1;
@@ -47,6 +69,12 @@ namespace dio_ros_driver
     return 0;
   }
 
+  /**
+   * @brief reset all ports
+   * reset all ports by default value of DO ports.
+   * @retval 0 success in resetting
+   * @retval -1 failed in resetting
+   */
   int32_t DOUTAccessor::resetAllPorts(void)
   {
     for (uint32_t i = 0; i < getNumOfPorts(); i++)
@@ -59,10 +87,16 @@ namespace dio_ros_driver
     return 0;
   }
 
+  /**
+   * @brief set direction
+   * set output direction for DO ports.
+   * @param[in] port targeted DO port.
+   */
   int32_t DOUTAccessor::setDirection(const dio_port_descriptor &port)
   {
+    const bool initial_value = value_inverse_ ^ dout_default_value_;
     std::string port_name = "/dio/dout" + std::to_string(port.port_offset_);
-    return gpiod_line_request_output(port.dio_line_, port_name.c_str(), static_cast<int>(dout_default_value_));
+    return gpiod_line_request_output(port.dio_line_, port_name.c_str(), static_cast<int32_t>(initial_value));
   }
 
 } // namespace dio_ros_driver

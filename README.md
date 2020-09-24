@@ -1,5 +1,5 @@
 # dio_ros_driver
-ROS Driver for accessing DIO with Linux-based manner
+ROS Driver for accessing DIO with libgpiod
 
 # Overvew
 In the golf-cart project, DIO module is used for several purpose.  
@@ -10,58 +10,71 @@ It receives topics which includes boolean value and write DO port.
 Topics are allocated to respective port.
 
 
-## Behavior
+## Execution
 ```
 $ roslaunch dio_ros_driver dio_ros_driver.launch chip_name:="gpiochip0" access_frequency:=10.0
 ```
 
 After executing this command, `dio_ros_driver_node` will run without any message.
-You can observe `/startbutton` topic. `/startbutton` is boolean data to show that selected button is pushed.
+You can observe topics such as `/dio/din[0-7]`, `/dio/din_status`, `/dio/dout[0-7]`. `/dio/dout_status`. `/dio/din[0-7]` and `/dio/dout_status` has boolean value which shows the state of corresponding DI and DO port.  `/dio/din_status` and `/dio/dout_status` indicates status and all values of respective ports.
 
 
 ## Arguments
 * `chip_name`: to select `gpiodchip[0-9]` in `/dev` directory
 * `access_frequency`: to set access frequency (default: 10.0)
-* `din_value_inverse_enable`: to inverse raw value from DIN port. If this value is true, raw value 0 is converted into value 1 when publishing topic (default: false)
+* `din_value_inverse`: to inverse raw value from DIN port. If this value is true, raw value 0 is converted into value 1 when publishing topic (default: false)
+* `dout_value_inverse`: to inverse raw value from DOUT port. If this value is true, raw value 0 is converted into value 1 when setting value (default: false)
 * `dout_default_value`: initial boolean value for DO ports (default: false)
 
-
 ## Topics
-* `/dio/din[0-7]`: Boolean value read from DI ports
-* `/dio/din_status`: Status and all ports' value from DI ports
-* `/dio/dout[0-7]`: Boolean value written into DO ports 
-* `/dio/dout_status`: Status and all ports' value from DO ports
+* `/dio/din[0-7]`
+  * message type: `dio_ros_driver/DIOPort`
+  * description: Boolean value read from DI ports
+* `/dio/din_status`
+  * message type: `dio_ros_driver/DIOStatus`
+  * description: Status and all ports' value from DI ports
+* `/dio/dout[0-7]`
+  * message type: `dio_ros_driver/DIOPort`
+  * descritpion: Boolean value written into DO ports
+* `/dio/dout_status`
+  * message type: `dio_ros_driver/DIOStatus`
+  * description: Status and all ports' value from DO ports
 
 
 ## Config file
-In [`port_list.yaml`](./msg/port_list.yaml), port offset is listed as below.
+In [`port_list.yaml`](./msg/port_list.yaml), port offset is listed as below. 
 
 ```
 din_ports:
-  - 72
-  - 73
-  - 74
-  - 75
-  - 76
-  - 77
-  - 78
-  - 79
+  - 72 # DIN port 0
+  - 73 # DIN port 1
+  - 74 # DIN port 2
+  - 75 # DIN port 3
+  - 76 # DIN port 4
+  - 77 # DIN port 5
+  - 78 # DIN port 6
+  - 79 # DIN port 7
 
 dout_ports:
-  - 105
-  - 106
-  - 107
-  - 108
-  - 109
-  - 110
-  - 111
-  - 112
+  - 105 # DOUT port 0
+  - 106 # DOUT port 1
+  - 107 # DOUT port 2
+  - 108 # DOUT port 3
+  - 109 # DOUT port 4
+  - 110 # DOUT port 5
+  - 111 # DOUT port 6
+  - 112 # DOUT port 7
 ```
 
 Each offset is assigned to ordering number. This `port_list.yaml` indicates that 0th DI port is corresponded to 72th offset of the DI module.  
+The list is defined based on DIO module coupled with ADLINK's MVP-6100 series.
+
+## Constraints
+* This node read data from DI port and write value to DO port periodically. If port value is updated several times in less period than access cycle, the node would use the last value when updating ports.
 
 
-# Prerequisite
+# Setup
+## Prerequisite
 System configuration:
 * OS: Ubuntu18.04
 * ROS: ROS Melodic
@@ -118,5 +131,36 @@ Add execution permission to the `/etc/rc.local`
 $ sudo chmod +x /etc/rc.local
 $ reboot
 ```
+
+## Build package and execute ROS node
+Build `dio_ros_package` with `colcon` command.
+```
+$ cd <working directory>
+$ source /opt/ros/melodic/setup.bash
+$ git clone git@github.com:tier4/dio_ros_driver.git # if you clone repository via ssh
+$ colcon build
+$ source install/setup.bash
+$ roslaunch dio_ros_driver dio_ros_driver.launch
+```
+
+After the command sequence, you can find `dio_ros_driver` node and topics.
+
+## Running `dio_ros_driver` on ADLINK's MVP-6100
+All ports of DIO, served by ADLINK's MVP-6100, has value which is active low.
+
+The following table shows relation between port value and polarity.
+
+| port value | polarity |
+| ---        | ---      |
+| 0          | positive |
+| 1          | negative |
+
+
+**Caution:** After startup, initial value would be 1 as negative polarity. It is strongly recommended that **1** should be set on DO ports during shutting down.
+
+
+# Design
+Please refer to [class diagram](./design/class.md), [sequence diagram](./design/sequence.md), and [activity diagram](./design/activity.md).
+
 
 

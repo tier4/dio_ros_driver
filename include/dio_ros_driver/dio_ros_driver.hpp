@@ -47,8 +47,8 @@ namespace dio_ros_driver
   class DIO_ROSDriver
   {
   public:
-    DIO_ROSDriver(const ros::NodeHandle &nh, const ros::NodeHandle &pnh);
-    ~DIO_ROSDriver() {}
+    DIO_ROSDriver(const ros::NodeHandle &nh, const ros::NodeHandle &pnh); // !<@brief Constructor
+    ~DIO_ROSDriver() {}                                                   //!<@brief Destructor
 
     int init(void);                // !<@brief DIO Accessor Initialization.
     void run(void);                // !<@brief Body of this node.
@@ -56,15 +56,15 @@ namespace dio_ros_driver
 
   private:
     // callbacks
-    void addAccessorPorts(const std::string param_name, DIO_AccessorBase &dio_accessor);
-    void requestUserWrite(const dio_ros_driver::DIOPort::ConstPtr &dout_topic, const uint32_t &port_id);
-    void readDINPorts(void);
-    void writeDOUTPorts(void);
-    void updateStatus(const DIO_AccessorBase &dio_accessor);
+    void addAccessorPorts(const std::string param_name, DIO_AccessorBase &dio_accessor);                    // !<@brief Add ports to given accessor.
+    void receiveWriteRequest(const dio_ros_driver::DIOPort::ConstPtr &dout_topic, const uint32_t &port_id); // !<@brief receive user write request.
+    void readDINPorts(void);                                                                                // !<@brief read all DI port and send them as topics
+    void writeDOUTPorts(void);                                                                              // !<@brief DO ports by value according to received request
+    void updateStatus(DIO_AccessorBase &dio_accessor, ros::Publisher &status_publisher);                    // !<@brief send updated status via topic.
 
     // Node handler.
-    ros::NodeHandle nh_;  //!< @brief ros node handle
-    ros::NodeHandle pnh_; //!< @brief ros node handle
+    ros::NodeHandle nh_;  //!< @brief ros node handle.
+    ros::NodeHandle pnh_; //!< @brief ros node handle.
 
     // Publisher and subscribers.
     std::array<ros::Publisher, MAX_PORT_NUM> din_port_publisher_array_;    //!< @brief ros publisher array
@@ -80,6 +80,7 @@ namespace dio_ros_driver
     double access_frequency_; //!<@brief pressing period.
     std::string chip_name_;   //!<@brief DIO Chip Name
     bool din_value_inverse_;  //!<@brief DIN value inverse enabler.
+    bool dout_value_inverse_; //!<@brief DOUT value inverse enabler.
     bool dout_default_value_; //!<@brief DOUT defaule value
 
     // variable for sharing between callbacks

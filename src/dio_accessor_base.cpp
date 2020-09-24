@@ -36,11 +36,12 @@ namespace dio_ros_driver
     setErrorCode(0xFFFF, NOT_OPEN_DIOCHIP);
   }
 
-  void DIO_AccessorBase::initialize(gpiod_chip *const dio_chip_descriptor)
+  void DIO_AccessorBase::initialize(gpiod_chip *const dio_chip_descriptor, const bool &value_inverse)
   {
-    dio_chip_descriptor_ = dio_chip_descriptor;
     if (dio_chip_descriptor != NULL)
       setErrorCode(0x0000, NO_DIO_ERROR);
+    dio_chip_descriptor_ = dio_chip_descriptor;
+    value_inverse_ = value_inverse;
   }
 
   bool DIO_AccessorBase::addPort(const uint16_t &port_offset)
@@ -57,16 +58,17 @@ namespace dio_ros_driver
       return 1;
     }
     // get line descriptor from gpiochip.
-    dio_ports_set[dio_port_num_].port_offset_ = port_offset;
-    dio_ports_set[dio_port_num_].dio_line_ = gpiod_chip_get_line(dio_chip_descriptor_, port_offset);
-    if (dio_ports_set[dio_port_num_].dio_line_ == NULL)
+    dio_port_descriptor &dio_port = dio_ports_set.at(dio_port_num_);
+    dio_port.port_offset_ = port_offset;
+    dio_port.dio_line_ = gpiod_chip_get_line(dio_chip_descriptor_, port_offset);
+    if (dio_port.dio_line_ == NULL)
     {
       std::cerr << "[dio_ros_driver] cannot get line #" << port_offset << std::endl;
       setErrorCode((0x0001 << dio_port_num_), NOT_GET_LINE);
       return 1;
     }
     // set direction to descriptor.
-    if (setDirection(dio_ports_set[dio_port_num_]) != 0)
+    if (setDirection(dio_port) != 0)
     {
       std::cerr << "[dio_ros_driver] cannot set direction #" << port_offset << std::endl;
       setErrorCode((0x0001 << dio_port_num_), NOT_SET_LINE_DIRECTION);
@@ -85,13 +87,15 @@ namespace dio_ros_driver
 
   int32_t DIO_AccessorBase::readPort(const uint16_t &port_id)
   {
-    int32_t din_value;
-    din_value = gpiod_line_get_value(dio_ports_set[port_id].dio_line_);
-    if (din_value < 0)
+    int32_t read_value;
+    read_value = gpiod_line_get_value(dio_ports_set.at(port_id).dio_line_);
+    if (read_value < 0)
     {
       setErrorCode((0x0001 << port_id), NOT_GET_LINE_VALUE);
     }
-    return din_value;
+    read_value = (static_cast<int>(value_inverse_) ^ read_value) & 0x0001;
+
+    return read_value;
   }
 
   dio_status DIO_AccessorBase::getStatus(void)
@@ -104,7 +108,7 @@ namespace dio_ros_driver
     }
 
     // get all value.
-    dio_status_.value_ = 0;
+    dio_status_.user_value_ = 0;
     int32_t read_value;
     for (uint32_t i = 0; i < dio_port_num_; i++)
     {
@@ -113,7 +117,7 @@ namespace dio_ros_driver
       {
         std::cerr << "[dio_ros_driver] failed in reading all ports.";
       }
-      dio_status_.value_ |= (static_cast<uint16_t>(read_value) << i);
+      dio_status_.user_value_ |= (static_cast<uint16_t>(read_value) << i);
     }
     return dio_status_;
   }

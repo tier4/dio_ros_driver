@@ -26,26 +26,18 @@
 
 namespace dio_ros_driver
 {
+
+  /**
+   * @brief Constructor of DIN Accessor 
+   * call super class's constructor.
+   */
   DINAccessor::DINAccessor(void) : DIO_AccessorBase()
   {
   }
 
   void DINAccessor::initialize(gpiod_chip *const dio_chip_descriptor, const bool &din_value_inverse)
   {
-    DIO_AccessorBase::initialize(dio_chip_descriptor);
-    din_value_inverse_ = din_value_inverse;
-  }
-
-  int32_t DINAccessor::readPort(const uint16_t &port_id)
-  {
-    int32_t read_value;
-    read_value = DIO_AccessorBase::readPort(port_id);
-    if (read_value < 0)
-    {
-      return read_value;
-    }
-    read_value = (static_cast<int>(din_value_inverse_) ^ read_value) & 0x0001;
-    return read_value;
+    DIO_AccessorBase::initialize(dio_chip_descriptor, din_value_inverse);
   }
 
   int32_t DINAccessor::writePort(const uint16_t &port_id, const bool &port_value)

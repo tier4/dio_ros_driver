@@ -35,6 +35,12 @@
 
 namespace dio_ros_driver
 {
+  /**
+   * @brief Constructor of DIO_ROSDriver
+   * Prepare ROS specific variable and initialize variable
+   * @param nh node handler
+   * @param pnh private node handler
+   */
   DIO_ROSDriver::DIO_ROSDriver(const ros::NodeHandle &nh, const ros::NodeHandle &pnh)
       : nh_(nh),
         pnh_(pnh),
@@ -47,6 +53,7 @@ namespace dio_ros_driver
         access_frequency_(1.0),
         chip_name_("chipname0"),
         din_value_inverse_(false),
+        dout_value_inverse_(false),
         dout_default_value_(false),
         write_update_mutex_(),
         dout_user_update_(),
@@ -56,21 +63,22 @@ namespace dio_ros_driver
     pnh_.param<double>("access_frequency", access_frequency_, 1.0);
     pnh_.param<std::string>("chip_name", chip_name_, "gpiochip0");
     pnh_.param<bool>("din_value_inverse", din_value_inverse_, false);
+    pnh_.param<bool>("dout_value_inverse", dout_value_inverse_, false);
     pnh_.param<bool>("dout_default_value", dout_default_value_, false);
 
     // prepare publishers
     for (uint32_t i = 0; i < MAX_PORT_NUM; i++)
     {
       std::string topic_name = "/dio/din" + std::to_string(i);
-      din_port_publisher_array_[i] = nh_.advertise<dio_ros_driver::DIOPort>(topic_name, 1, false);
+      din_port_publisher_array_.at(i) = nh_.advertise<dio_ros_driver::DIOPort>(topic_name, 1, false);
     }
     // prepare subscribers
     for (uint32_t i = 0; i < MAX_PORT_NUM; i++)
     {
       std::string topic_name = "/dio/dout" + std::to_string(i);
-      dout_port_subscriber_array_[i] = nh_.subscribe<dio_ros_driver::DIOPort>(topic_name,
-                                                                              1,
-                                                                              boost::bind(&DIO_ROSDriver::requestUserWrite, this, _1, i));
+      dout_port_subscriber_array_.at(i) = nh_.subscribe<dio_ros_driver::DIOPort>(topic_name,
+                                                                                 1,
+                                                                                 boost::bind(&DIO_ROSDriver::receiveWriteRequest, this, _1, i));
     }
 
     din_status_publisher_ = nh_.advertise<dio_ros_driver::DIOStatus>("/dio/din_status", 1, false);
@@ -81,7 +89,7 @@ namespace dio_ros_driver
   {
     dio_chip_ = gpiod_chip_open_by_name(chip_name_.c_str());
     din_accessor_.initialize(dio_chip_, din_value_inverse_);
-    dout_accessor_.initialize(dio_chip_, dout_default_value_);
+    dout_accessor_.initialize(dio_chip_, dout_value_inverse_, dout_default_value_);
 
     addAccessorPorts("/dio/din_ports", din_accessor_);
     addAccessorPorts("/dio/dout_ports", dout_accessor_);
@@ -89,26 +97,9 @@ namespace dio_ros_driver
     return 0;
   }
 
-  void DIO_ROSDriver::addAccessorPorts(const std::string param_name, DIO_AccessorBase &dio_accessor)
-  {
-    // get port number array.
-    std::vector<int32_t> offset_array;
-    nh_.getParam(param_name, offset_array);
-
-    for (const auto &offset : offset_array)
-    {
-      dio_accessor.addPort(offset);
-    }
-    return;
-  }
-
-  void DIO_ROSDriver::requestUserWrite(const dio_ros_driver::DIOPort::ConstPtr &dout_topic, const uint32_t &port_id)
-  {
-    write_update_mutex_.lock();
-    dout_user_update_[port_id].update_ = true;
-    dout_user_update_[port_id].value_ = dout_topic->value;
-    write_update_mutex_.unlock();
-  }
+  /**
+   * @brief 
+   */
 
   void DIO_ROSDriver::run(void)
   {
@@ -118,8 +109,6 @@ namespace dio_ros_driver
 
     dio_status din_status = din_accessor_.getStatus();
     dio_status dout_status = dout_accessor_.getStatus();
-    dio_ros_driver::DIOStatus din_status_topic;
-    dio_ros_driver::DIOStatus dout_status_topic;
 
     while (ros::ok())
     {
@@ -130,63 +119,23 @@ namespace dio_ros_driver
       if (dout_status.status_ == 0)
         writeDOUTPorts();
       // publish din_status
-      din_status = din_accessor_.getStatus();
-      din_status_topic.raw_value = din_status.value_;
-      din_status_topic.status = din_status.status_;
-      din_status_publisher_.publish(din_status_topic);
+      updateStatus(din_accessor_, din_status_publisher_);
       // publish dout_status
-      dout_status = dout_accessor_.getStatus();
-      dout_status_topic.raw_value = dout_status.value_;
-      dout_status_topic.status = dout_status.status_;
-      dout_status_publisher_.publish(dout_status_topic);
+      updateStatus(dout_accessor_, dout_status_publisher_);
 
       loop_rate.sleep();
     }
   }
 
-  void DIO_ROSDriver::readDINPorts(void)
-  {
-    int32_t read_value;
-    dio_ros_driver::DIOPort din_port;
-    for (uint32_t i = 0; i < din_accessor_.getNumOfPorts(); i++)
-    {
-      read_value = din_accessor_.readPort(i);
-      if (read_value < 0)
-      {
-        ROS_ERROR("DI read error %d", i);
-      }
-      else
-      {
-        din_port.value = static_cast<bool>(read_value);
-        din_port_publisher_array_[i].publish(din_port);
-      }
-    }
-  }
-
-  void DIO_ROSDriver::writeDOUTPorts(void)
-  {
-    write_update_mutex_.lock();
-    for (uint32_t i = 0; i < dout_accessor_.getNumOfPorts(); i++)
-    {
-      if (dout_user_update_[i].update_ == true)
-      {
-        int32_t ret_code = dout_accessor_.writePort(i, dout_user_update_[i].value_);
-        if (ret_code == -1)
-        {
-          ROS_ERROR("DOUT write error %d", i);
-        }
-        dout_user_update_[i].update_ = false;
-      }
-    }
-    write_update_mutex_.unlock();
-  }
-
-  /*
-  */
+  /**
+   * @brief terminate processing
+   * After receiving SIGTERM signal, this method will be called.
+   * @param signal_id signal id which is expected by SIGTERM.
+   */
   void DIO_ROSDriver::terminate(int signal_id)
   {
     ROS_INFO("Terminate process");
-    int32_t exit_status;
+    int32_t exit_status = 0;
     const dio_status dout_status = dout_accessor_.getStatus();
     // any other thread cannot access dout_accessor_ object.
     write_update_mutex_.lock();
@@ -226,6 +175,78 @@ namespace dio_ros_driver
     gpiod_chip_close(dio_chip_);
 
     std::exit(exit_status);
+  }
+
+  /// Private methods.
+  void DIO_ROSDriver::addAccessorPorts(const std::string param_name, DIO_AccessorBase &dio_accessor)
+  {
+    // get port number array.
+    std::vector<int32_t> offset_array;
+    nh_.getParam(param_name, offset_array);
+
+    for (const auto &offset : offset_array)
+    {
+      dio_accessor.addPort(offset);
+    }
+    return;
+  }
+
+  void DIO_ROSDriver::receiveWriteRequest(const dio_ros_driver::DIOPort::ConstPtr &dout_topic, const uint32_t &port_id)
+  {
+    write_update_mutex_.lock();
+    dout_update &targeted_dout_update = dout_user_update_.at(port_id);
+    targeted_dout_update.update_ = true;
+    targeted_dout_update.value_ = dout_topic->value;
+    write_update_mutex_.unlock();
+  }
+
+  void DIO_ROSDriver::readDINPorts(void)
+  {
+    int32_t read_value;
+    dio_ros_driver::DIOPort din_port;
+    din_port.header.stamp = ros::Time::now();
+    for (uint32_t i = 0; i < din_accessor_.getNumOfPorts(); i++)
+    {
+      read_value = din_accessor_.readPort(i);
+      if (read_value < 0)
+      {
+        ROS_ERROR("DI read error %d", i);
+      }
+      else
+      {
+        din_port.value = static_cast<bool>(read_value);
+        din_port_publisher_array_.at(i).publish(din_port);
+      }
+    }
+  }
+
+  void DIO_ROSDriver::writeDOUTPorts(void)
+  {
+    write_update_mutex_.lock();
+    for (uint32_t i = 0; i < dout_accessor_.getNumOfPorts(); i++)
+    {
+      if (dout_user_update_.at(i).update_ == true)
+      {
+        int32_t ret_code = dout_accessor_.writePort(i, dout_user_update_.at(i).value_);
+        if (ret_code == -1)
+        {
+          ROS_ERROR("DOUT write error %d", i);
+        }
+        dout_user_update_.at(i).update_ = false;
+      }
+    }
+    write_update_mutex_.unlock();
+  }
+
+  void DIO_ROSDriver::updateStatus(DIO_AccessorBase &dio_accessor, ros::Publisher &status_publisher)
+  {
+    dio_ros_driver::DIOStatus dio_status_topic;
+    dio_status updated_dio_status = dio_accessor.getStatus();
+    dio_status_topic.user_value = updated_dio_status.user_value_;
+    dio_status_topic.status = updated_dio_status.status_;
+    dio_status_topic.header.stamp = ros::Time::now();
+    status_publisher.publish(dio_status_topic);
+    return;
   }
 
 } // namespace dio_ros_driver
