@@ -41,6 +41,10 @@ You can observe topics such as `/dio/din[0-7]`, `/dio/din_status`, `/dio/dout[0-
   * message type: `dio_ros_driver/DIOStatus`
   * description: Status and all ports' value from DO ports
 
+**Note(1):** If `status` field of `/dio/din_status` is not equaled to 0, all DI ports cannot be accessed and any DI topic cannot published. 
+
+**Note(2):** If `status` field of `/dio/dout_status` is not equaled to 0, all DO ports cannot be accessed and updated.
+
 
 ## Config file
 In [`port_list.yaml`](./msg/port_list.yaml), port offset is listed as below. 
