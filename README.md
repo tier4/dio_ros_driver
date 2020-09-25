@@ -24,7 +24,8 @@ You can observe topics such as `/dio/din[0-7]`, `/dio/din_status`, `/dio/dout[0-
 * `access_frequency`: to set access frequency (default: 10.0)
 * `din_value_inverse`: to inverse raw value from DIN port. If this value is true, raw value 0 is converted into value 1 when publishing topic (default: false)
 * `dout_value_inverse`: to inverse raw value from DOUT port. If this value is true, raw value 0 is converted into value 1 when setting value (default: false)
-* `dout_default_value`: initial boolean value for DO ports (default: false)
+* `dout_default_value`: initial boolean value for DO ports (default: true)
+  * default value is true because initial value from DO port of ADLINK's MVP-6100 has **1 (true)**
 
 ## Topics
 * `/dio/din[0-7]`
@@ -156,7 +157,7 @@ The following table shows relation between port value and polarity.
 | 1          | negative |
 
 
-**Caution:** After startup, initial value would be 1 as negative polarity. It is strongly recommended that **1** should be set on DO ports during shutting down.
+**Caution:** After startup, initial value would be 1 as negative polarity. It is strongly recommended that **1** should be set on DO ports during shutting down. If inversion option is enabled, **0** must be set.
 
 
 # Design

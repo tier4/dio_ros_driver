@@ -14,42 +14,55 @@
  * limitations under the License.
  */
 
-/*
- * Package: dio_ros_driver
- * File Name: din_accessor.cpp
- * Author: Takayuki AKAMINE
- * Description: Body fine for din accessor
+/**
+ * @package dio_ros_driver
+ * @file din_accessor.cpp
+ * @brief DIN Accessor class
+ * @author Takayuki AKAMINE
+ * 
  */
 
 #include "dio_ros_driver/din_accessor.hpp"
 #include <iostream>
 
-namespace dio_ros_driver
-{
+namespace dio_ros_driver {
 
   /**
    * @brief Constructor of DIN Accessor 
    * call super class's constructor.
    */
-  DINAccessor::DINAccessor(void) : DIO_AccessorBase()
-  {
-  }
+  DINAccessor::DINAccessor(void) : DIO_AccessorBase() {}
 
-  void DINAccessor::initialize(gpiod_chip *const dio_chip_descriptor, const bool &din_value_inverse)
-  {
+  /**
+   * @brief initialize for handling DI ports
+   * Set DIO chip descriptor and inverse option for accessing DO port.
+   * @param[in] dio_chip_descriptor DIO chip descriptor
+   * @param[in] din_value_inverse inverse boolean value option
+   */
+  void DINAccessor::initialize(gpiod_chip *const dio_chip_descriptor, const bool &din_value_inverse) {
     DIO_AccessorBase::initialize(dio_chip_descriptor, din_value_inverse);
   }
 
-  int32_t DINAccessor::writePort(const uint16_t &port_id, const bool &port_value)
-  {
+  /**
+   * @brief warn that this accessor for DI port.
+   * only warn that this is DI port accessor.
+   * @param[in] port_id     to specify the target port, but unused.
+   * @param[in] port_value  to give value
+   * @retval 0 always return 0 because it does not influences on the system.
+   */
+  int32_t DINAccessor::writePort(const uint16_t &port_id, const bool &port_value) {
     std::cerr << "cannot write din port: " << port_id << std::endl;
     return 0;
   }
 
-  int32_t DINAccessor::setDirection(const dio_port_descriptor &port)
-  {
+  /**
+   * @brief set direction
+   * set input direction for DI port.
+   * @param[in] port targeted DI port.
+   */
+  int32_t DINAccessor::setDirection(const dio_port_descriptor &port) {
     std::string port_name = "/dio/din" + std::to_string(port.port_offset_);
     return gpiod_line_request_input(port.dio_line_, port_name.c_str());
   }
 
-} // namespace dio_ros_driver
+}  // namespace dio_ros_driver

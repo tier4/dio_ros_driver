@@ -14,37 +14,33 @@
  * limitations under the License.
  */
 
-/*
- * Package: dio_ros_driver
- * File Name: din_accessor.hpp
- * Author: Takayuki AKAMINE
- * Description: Header file for dio_ros_driver
+/**
+ * @package dio_ros_driver
+ * @file din_accessor.hpp
+ * @brief DIN Accessor class header
+ * @author Takayuki AKAMINE
  */
 
 #ifndef __DIN_ACCESSOR_HPP__
 #define __DIN_ACCESSOR_HPP__
 
-#include "dio_accessor_base.hpp"
-
-extern "C"
-{
+extern "C" {
 #include <gpiod.h>
 }
 #include <cstdint>
+#include "dio_accessor_base.hpp"
 
-namespace dio_ros_driver
-{
-  class DINAccessor : public DIO_AccessorBase
-  {
-  public:
-    DINAccessor();
-    ~DINAccessor() {}
-    void initialize(gpiod_chip *const dio_chip_descriptor, const bool &din_value_inverse);
-    int32_t writePort(const uint16_t &port_id, const bool &port_value) override;
+namespace dio_ros_driver {
+class DINAccessor : public DIO_AccessorBase {
+ public:
+  DINAccessor();                                                                         // !<@brief Constructor of DIN Accessor
+  ~DINAccessor() {}                                                                      // !<@brief Destructor of DIN Accessor
+  void initialize(gpiod_chip *const dio_chip_descriptor, const bool &din_value_inverse);  // !<@brief initialize for handling DI ports
+  int32_t writePort(const uint16_t &port_id, const bool &port_value) override;           // !<@brief warn that this accessor for DI port.
 
-  private:
-    int32_t setDirection(const dio_port_descriptor &port) override;
-  };
-} // namespace dio_ros_driver
+ private:
+  int32_t setDirection(const dio_port_descriptor &port) override;  // !<@brief set direction
+};
+}  // namespace dio_ros_driver
 
 #endif

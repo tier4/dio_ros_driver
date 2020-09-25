@@ -3,7 +3,7 @@
   <arg name="chip_name" default="gpiochip0" />
   <arg name="din_value_inverse" default="false" />
   <arg name="dout_value_inverse" default="false" />
-  <arg name="dout_default_value" default="false" />
+  <arg name="dout_default_value" default="true" />
 
   <group ns="dio">
     <rosparam file="$(find dio_ros_driver)/config/port_list.yaml" />

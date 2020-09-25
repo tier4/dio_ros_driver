@@ -14,39 +14,36 @@
  * limitations under the License.
  */
 
-/*
- * Package: dio_ros_driver
- * File Name: dout_accessor.hpp
- * Author: Takayuki AKAMINE
- * Description: Header file for dio_ros_driver
+/**
+ * @package dio_ros_driver
+ * @file dout_accessor.hpp
+ * @brief DOUT Accessor class
+ * @author: Takayuki AKAMINE
  */
 
 #ifndef __DOUT_ACCESSOR_HPP__
 #define __DOUT_ACCESSOR_HPP__
 
-#include "dio_accessor_base.hpp"
-
-extern "C"
-{
+extern "C" {
 #include <gpiod.h>
 }
 #include <cstdint>
 
-namespace dio_ros_driver
-{
-  class DOUTAccessor : public DIO_AccessorBase
-  {
-  public:
-    DOUTAccessor();
-    ~DOUTAccessor() {}
-    void initialize(gpiod_chip *const dio_chip_descriptor, const bool &dout_value_inverse, const bool &dout_default_value);
-    int32_t writePort(const uint16_t &port_id, const bool &port_value) override;
-    int32_t resetAllPorts(void);
+#include "dio_accessor_base.hpp"
 
-  private:
-    int32_t setDirection(const dio_port_descriptor &port) override;
-    bool dout_default_value_;
-  };
-} // namespace dio_ros_driver
+namespace dio_ros_driver {
+class DOUTAccessor : public DIO_AccessorBase {
+ public:
+  DOUTAccessor();                                                                                                          // !<@brief DOUT Accessor Constructor
+  ~DOUTAccessor() {}                                                                                                       // !<@brief DOUT Accessor Destructor
+  void initialize(gpiod_chip *const dio_chip_descriptor, const bool &dout_value_inverse, const bool &dout_default_value);  // !<@brief initialize DOUT Accessor
+  int32_t writePort(const uint16_t &port_id, const bool &port_value) override;                                             // !<@brief write given value to targeted port
+  int32_t resetAllPorts(void);                                                                                             // !<@brief reset all ports by default value
+
+ private:
+  int32_t setDirection(const dio_port_descriptor &port) override;  // !<brief set direction
+  bool dout_default_value_;                                        // !<@brief initial value
+};
+}  // namespace dio_ros_driver
 
 #endif

@@ -14,17 +14,20 @@
  * limitations under the License.
  */
 
-/*
- * Package: dio_ros_driver
- * File Name: dio_driver.hpp
- * Author: Takayuki AKAMINE
- * Description: Header file for dio_ros_driver
+/**
+ * @package dio_ros_driver
+ * @file dio_driver.hpp
+ * @brief DIO ROS Driver class
+ * @author Takayuki AKAMINE
  */
 
 #ifndef __DIO_ROS_DRIVER_HPP__
 #define __DIO_ROS_DRIVER_HPP__
 
+#include <dio_ros_driver/DIOPort.h>
+
 #include <ros/ros.h>
+#include <string>
 #include <cstdint>
 #include <array>
 #include <vector>
@@ -32,62 +35,58 @@
 
 #include "din_accessor.hpp"
 #include "dout_accessor.hpp"
-#include <dio_ros_driver/DIOPort.h>
 
-namespace dio_ros_driver
-{
-  typedef struct dout_update
-  {
-    bool update_;
-    bool value_;
-    dout_update() : update_(false), value_() {}
-    dout_update(const bool &update_, const bool &value_);
-  } dout_update;
+namespace dio_ros_driver {
+typedef struct dout_update {
+  bool update_;
+  bool value_;
+  dout_update() : update_(false), value_() {}
+  dout_update(const bool &update_, const bool &value_);
+} dout_update;  // !<@brief indicator of update and value for updating port
 
-  class DIO_ROSDriver
-  {
-  public:
-    DIO_ROSDriver(const ros::NodeHandle &nh, const ros::NodeHandle &pnh); // !<@brief Constructor
-    ~DIO_ROSDriver() {}                                                   //!<@brief Destructor
+class DIO_ROSDriver {
+ public:
+  DIO_ROSDriver(const ros::NodeHandle &nh, const ros::NodeHandle &pnh);  // !<@brief Constructor
+  ~DIO_ROSDriver() {}                                                    // !<@brief Destructor
 
-    int init(void);                // !<@brief DIO Accessor Initialization.
-    void run(void);                // !<@brief Body of this node.
-    void terminate(int singal_id); // !<@brief terminate processing.
+  int init(void);                 // !<@brief DIO Accessor Initialization.
+  void run(void);                 // !<@brief main routine of this node.
+  void terminate(int singal_id);  // !<@brief terminate processing.
 
-  private:
-    // callbacks
-    void addAccessorPorts(const std::string param_name, DIO_AccessorBase &dio_accessor);                    // !<@brief Add ports to given accessor.
-    void receiveWriteRequest(const dio_ros_driver::DIOPort::ConstPtr &dout_topic, const uint32_t &port_id); // !<@brief receive user write request.
-    void readDINPorts(void);                                                                                // !<@brief read all DI port and send them as topics
-    void writeDOUTPorts(void);                                                                              // !<@brief DO ports by value according to received request
-    void updateStatus(DIO_AccessorBase &dio_accessor, ros::Publisher &status_publisher);                    // !<@brief send updated status via topic.
+ private:
+  // callbacks
+  void addAccessorPorts(const std::string param_name, DIO_AccessorBase &dio_accessor);                     // !<@brief Add ports to given accessor.
+  void receiveWriteRequest(const dio_ros_driver::DIOPort::ConstPtr &dout_topic, const uint32_t &port_id);  // !<@brief receive user write request.
+  void readDINPorts(void);                                                                                 // !<@brief read all DI port and send them as topics
+  void writeDOUTPorts(void);                                                                               // !<@brief DO ports by value according to received request
+  void updateStatus(DIO_AccessorBase &dio_accessor, ros::Publisher &status_publisher);                     // !<@brief send updated status via topic.
 
     // Node handler.
-    ros::NodeHandle nh_;  //!< @brief ros node handle.
-    ros::NodeHandle pnh_; //!< @brief ros node handle.
+  ros::NodeHandle nh_;   // !< @brief ros node handle.
+  ros::NodeHandle pnh_;  // !< @brief ros node handle.
 
     // Publisher and subscribers.
-    std::array<ros::Publisher, MAX_PORT_NUM> din_port_publisher_array_;    //!< @brief ros publisher array
-    std::array<ros::Subscriber, MAX_PORT_NUM> dout_port_subscriber_array_; //!< @brief ros publisher array
-    ros::Publisher din_status_publisher_;                                  //!< @brief din status message publisher
-    ros::Publisher dout_status_publisher_;                                 //!< @brief dout status status message publisher
+  std::array<ros::Publisher, MAX_PORT_NUM> din_port_publisher_array_;     // !< @brief ros publisher array
+  std::array<ros::Subscriber, MAX_PORT_NUM> dout_port_subscriber_array_;  // !< @brief ros publisher array
+  ros::Publisher din_status_publisher_;                                   // !< @brief din status message publisher
+  ros::Publisher dout_status_publisher_;                                  // !< @brief dout status status message publisher
 
-    // Access handler.
-    DINAccessor din_accessor_;   //!< @brief DIN Accessor.
-    DOUTAccessor dout_accessor_; //!< @brief DOUT Accessor.
+  // Access handler.
+  DINAccessor din_accessor_;    // !< @brief DIN Accessor.
+  DOUTAccessor dout_accessor_;  // !< @brief DOUT Accessor.
 
-    // Variables for parametr.
-    double access_frequency_; //!<@brief pressing period.
-    std::string chip_name_;   //!<@brief DIO Chip Name
-    bool din_value_inverse_;  //!<@brief DIN value inverse enabler.
-    bool dout_value_inverse_; //!<@brief DOUT value inverse enabler.
-    bool dout_default_value_; //!<@brief DOUT defaule value
+  // Variables for parametr.
+  double access_frequency_;  // !<@brief pressing period.
+  std::string chip_name_;    // !<@brief DIO Chip Name
+  bool din_value_inverse_;   // !<@brief DIN value inverse enabler.
+  bool dout_value_inverse_;  // !<@brief DOUT value inverse enabler.
+  bool dout_default_value_;  // !<@brief DOUT defaule value
 
-    // variable for sharing between callbacks
-    std::mutex write_update_mutex_;                          //!<@brief mutex.
-    std::array<dout_update, MAX_PORT_NUM> dout_user_update_; //!<@brief update list.
-    gpiod_chip *dio_chip_;                                   //!<@brief chip descriptor
-  };
-} // namespace dio_ros_driver
+  // variable for sharing between callbacks
+  std::mutex write_update_mutex_;                           // !<@brief mutex.
+  std::array<dout_update, MAX_PORT_NUM> dout_user_update_;  // !<@brief update list.
+  gpiod_chip *dio_chip_;                                    // !<@brief chip descriptor
+};
+}  // namespace dio_ros_driver
 
 #endif
