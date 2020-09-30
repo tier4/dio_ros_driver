@@ -35,7 +35,6 @@ class DINAccessor : public DIO_AccessorBase {
  public:
   DINAccessor();                                                                         // !<@brief Constructor of DIN Accessor
   ~DINAccessor() {}                                                                      // !<@brief Destructor of DIN Accessor
-  void initialize(gpiod_chip *const dio_chip_descriptor, const bool &din_value_inverse);  // !<@brief initialize for handling DI ports
   int32_t writePort(const uint16_t &port_id, const bool &port_value) override;           // !<@brief warn that this accessor for DI port.
 
  private:

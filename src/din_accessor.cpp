@@ -34,16 +34,6 @@ namespace dio_ros_driver {
   DINAccessor::DINAccessor(void) : DIO_AccessorBase() {}
 
   /**
-   * @brief initialize for handling DI ports
-   * Set DIO chip descriptor and inverse option for accessing DO port.
-   * @param[in] dio_chip_descriptor DIO chip descriptor
-   * @param[in] din_value_inverse inverse boolean value option
-   */
-  void DINAccessor::initialize(gpiod_chip *const dio_chip_descriptor, const bool &din_value_inverse) {
-    DIO_AccessorBase::initialize(dio_chip_descriptor, din_value_inverse);
-  }
-
-  /**
    * @brief warn that this accessor for DI port.
    * only warn that this is DI port accessor.
    * @param[in] port_id     to specify the target port, but unused.
@@ -51,7 +41,13 @@ namespace dio_ros_driver {
    * @retval 0 always return 0 because it does not influences on the system.
    */
   int32_t DINAccessor::writePort(const uint16_t &port_id, const bool &port_value) {
-    std::cerr << "cannot write din port: " << port_id << std::endl;
+    if (port_id >= dio_port_num_) {
+      setAccessorStatus(ERROR_ACCESSOR_ILLEGAL_PORT_ACCESS);
+      return -1;
+    }
+    setAccessorStatus(WARN_PORT_SETTING_VALU_ON_DIN_VALUE);
+    setPortStatus(port_id, WARNING_WRITE_VALUE_TO_DIN_PORT);
+
     return 0;
   }
 

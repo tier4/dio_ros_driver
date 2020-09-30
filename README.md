@@ -16,7 +16,8 @@ $ roslaunch dio_ros_driver dio_ros_driver.launch chip_name:="gpiochip0" access_f
 ```
 
 After executing this command, `dio_ros_driver_node` will run without any message.
-You can observe topics such as `/dio/din[0-7]`, `/dio/din_status`, `/dio/dout[0-7]`. `/dio/dout_status`. `/dio/din[0-7]` and `/dio/dout_status` has boolean value which shows the state of corresponding DI and DO port.  `/dio/din_status` and `/dio/dout_status` indicates status and all values of respective ports.
+You can observe topics such as `/dio/din[0-7]`, and `/dio/dout[0-7]`. `/dio/din[0-7]` and `/dio/dout[0-7]` has boolean value which shows the state of corresponding DI and DO port.   
+`dio_ros_driver_node` borrows ROS `diagnostics` framework as diagnostic function, and publishes `/diagnostics` topic.
 
 
 ## Arguments
@@ -27,23 +28,29 @@ You can observe topics such as `/dio/din[0-7]`, `/dio/din_status`, `/dio/dout[0-
 * `dout_default_value`: initial boolean value for DO ports (default: true)
   * default value is true because initial value from DO port of ADLINK's MVP-6100 has **1 (true)**
 
+
+**Note:** `dout_value_inverse` option precedes `dout_default_value`.
+The following truth table shows the initial value of DO port according to the combination of `dout_value_inverse` and `dout_default_value`.
+
+| `dout_value_inverse` | `dout_default_value` | DO raw value | DO user value |
+| ---                  | ---                  | ---          | ---           |
+|  0                   | 0                    | 0            | 0             |
+|  0                   | 1                    | 1            | 1             |
+|  1                   | 0                    | 1            | 0             |
+|  1                   | 1                    | 0            | 1             |
+
+
+
 ## Topics
 * `/dio/din[0-7]`
   * message type: `dio_ros_driver/DIOPort`
   * description: Boolean value read from DI ports
-* `/dio/din_status`
-  * message type: `dio_ros_driver/DIOStatus`
-  * description: Status and all ports' value from DI ports
 * `/dio/dout[0-7]`
   * message type: `dio_ros_driver/DIOPort`
   * descritpion: Boolean value written into DO ports
-* `/dio/dout_status`
-  * message type: `dio_ros_driver/DIOStatus`
-  * description: Status and all ports' value from DO ports
-
-**Note(1):** If `status` field of `/dio/din_status` is not equaled to 0, all DI ports cannot be accessed and any DI topic cannot published. 
-
-**Note(2):** If `status` field of `/dio/dout_status` is not equaled to 0, all DO ports cannot be accessed and updated.
+* `/diagnostics`
+  * message type: `diagnostic_msgs/DiagnosticArray`
+  * description: Diagnostic notification sent at frequency. The notification is provided per a bundle of DI ports and that of DO ports.
 
 
 ## Config file
@@ -76,6 +83,56 @@ The list is defined based on DIO module coupled with ADLINK's MVP-6100 series.
 
 ## Constraints
 * This node read data from DI port and write value to DO port periodically. If port value is updated several times in less period than access cycle, the node would use the last value when updating ports.
+
+## Status code
+Status code is provided to notify the status of `dio_ros_driver_node`. The status code is included in `/diagnostics` topic, and is consumed by `diagnostic aggregator` and `rqt_runtime_monitor`.  
+  `rqt_runtime_monitor` shows the status code and update it per period.
+
+Two types of status code is provided: port-bundle-level and port-level. The port-bundle-level status code shows status of whole DI or DO ports. The port-bundle-level status code shows an error if any DIO port has any error. The port-level status code is assigned to each port, and shows each status of port. They are prepared for DI ports and DO ports, respectively. 
+
+The following value table shows port-bundle-level status code.
+The port-bundle-level status code is defined as `uint16_t`.
+
+
+| status code value | severity | definition |
+| ---               | ---      | ---  |
+| 0x0000            | OK  | DIO is accessed without any error. |
+| 0x0100            | WARNING  | There is no initialized port. |
+| 0x0101            | WARNING  | Unexpectedly, value is written to input port. |
+| 0x1000            | ERROR    | Selected GPIO chip is not opened because of existence, permission, or a certain reason. |
+| 0x1001            | ERROR    | More than 8 ports are selected to access |
+| 0x1002            | ERROR    | Unassigned port is accessed. (This error would not be reached in this implementation) |
+| 0x1003            | ERROR    | `dio_ros_driver` cannot get all values from assigned ports. |
+| 0x1004            | ERROR    | `dio_ros_driver` cannot reset all of assigned DO ports. |
+| 0x1005            | ERROR    | `dio_ros_driver` cannot get access permission to a certain DI or DO port. |
+| 0x1006            | ERROR    | `dio_ros_driver` cannot give direction to a certain port. |
+| 0x1007            | ERROR    | `dio_ros_driver` failed in getting value from a port. |
+| 0x1008            | ERROR    | `dio_ros_driver` failed in setting value to a port. |
+
+
+
+
+
+
+**Warning:** Once any error occurs on any of DI ports, `dio_ros_driver` would not publishing `/dio/din[0-7]` topics. On the other hand, once error occurs on any of DO ports, `dio_ros_driver` would not update DO ports anymore.   
+
+
+The definition of port-level status is shown as the following table also.
+Even if one of port has error status, the corresponding port-bundle-level status has error status. This port-level status is defined as `uint16_t`
+
+| status code value | severity | definition |
+| ---               | ---      | ---        |
+| 0x0000            | OK       | port is not initialized. |
+| 0x0001            | OK       | port is working fine.    |
+| 0x0100            | WARNING  | value is written to input port. |
+| 0x1000            | ERROR    | port is not assinged to selected port offset. |
+| 0x1001            | ERROR    | port is not assinged to selected port direction. |
+| 0x1002            | ERROR    | port is failed in returning value. |
+| 0x1003            | ERROR    | port is failed in setting value. |
+| 0x1004            | ERROR    | undefined port is accessed.  |
+
+
+You can check the status with using `rqt_runtime_monitor` as [the following picture](./design/img/status_monitoring.png).
 
 
 # Setup

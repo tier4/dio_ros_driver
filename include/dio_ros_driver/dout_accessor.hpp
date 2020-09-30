@@ -29,7 +29,7 @@ extern "C" {
 }
 #include <cstdint>
 
-#include "dio_accessor_base.hpp"
+#include "dio_ros_driver/dio_accessor_base.hpp"
 
 namespace dio_ros_driver {
 class DOUTAccessor : public DIO_AccessorBase {

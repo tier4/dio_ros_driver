@@ -9,6 +9,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   std_msgs
   message_generation
+  diagnostic_msgs
 )
 find_package(Boost REQUIRED
   COMPONENTS system
@@ -24,7 +25,6 @@ include_directories(
 add_message_files(
   FILES
   DIOPort.msg
-  DIOStatus.msg
 )
 
 generate_messages (
@@ -37,7 +37,9 @@ set(SOURCE_FILES src/dio_ros_driver_node.cpp
                  src/dio_ros_driver.cpp
                  src/dio_accessor_base.cpp
                  src/din_accessor.cpp
-                 src/dout_accessor.cpp)
+                 src/dout_accessor.cpp
+		 src/dio_diagnostic_updater.cpp
+		 src/dio_accessor_diagnosis.cpp)
 add_executable(${PROJECT_NAME}_node ${SOURCE_FILES})
 
 add_dependencies(${PROJECT_NAME}_node

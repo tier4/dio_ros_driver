@@ -32,9 +32,11 @@
 #include <array>
 #include <vector>
 #include <mutex>
+#include <memory>
 
-#include "din_accessor.hpp"
-#include "dout_accessor.hpp"
+#include "dio_ros_driver/din_accessor.hpp"
+#include "dio_ros_driver/dout_accessor.hpp"
+#include "dio_ros_driver/dio_diagnostic_updater.hpp"
 
 namespace dio_ros_driver {
 typedef struct dout_update {
@@ -55,25 +57,27 @@ class DIO_ROSDriver {
 
  private:
   // callbacks
-  void addAccessorPorts(const std::string param_name, DIO_AccessorBase &dio_accessor);                     // !<@brief Add ports to given accessor.
-  void receiveWriteRequest(const dio_ros_driver::DIOPort::ConstPtr &dout_topic, const uint32_t &port_id);  // !<@brief receive user write request.
-  void readDINPorts(void);                                                                                 // !<@brief read all DI port and send them as topics
-  void writeDOUTPorts(void);                                                                               // !<@brief DO ports by value according to received request
-  void updateStatus(DIO_AccessorBase &dio_accessor, ros::Publisher &status_publisher);                     // !<@brief send updated status via topic.
+  void addAccessorPorts(const std::string param_name,
+			std::shared_ptr<DIO_AccessorBase> dio_accessor);           // !<@brief Add ports to given accessor.
+  void receiveWriteRequest(const dio_ros_driver::DIOPort::ConstPtr &dout_topic,
+			   const uint32_t &port_id);                               // !<@brief receive user write request.
+  void readDINPorts(void);                                                         // !<@brief read all DI port and send them as topics
+  void writeDOUTPorts(void);                                                       // !<@brief DO ports by value according to received request
 
-    // Node handler.
-  ros::NodeHandle nh_;   // !< @brief ros node handle.
-  ros::NodeHandle pnh_;  // !< @brief ros node handle.
+  // Node handler.
+  ros::NodeHandle nh_;   // !<@brief ros node handle.
+  ros::NodeHandle pnh_;  // !<@brief ros node handle.
 
-    // Publisher and subscribers.
-  std::array<ros::Publisher, MAX_PORT_NUM> din_port_publisher_array_;     // !< @brief ros publisher array
-  std::array<ros::Subscriber, MAX_PORT_NUM> dout_port_subscriber_array_;  // !< @brief ros publisher array
-  ros::Publisher din_status_publisher_;                                   // !< @brief din status message publisher
-  ros::Publisher dout_status_publisher_;                                  // !< @brief dout status status message publisher
+  // Publisher and subscribers.
+  std::array<ros::Publisher, MAX_PORT_NUM> din_port_publisher_array_;     // !<@brief ros publishers array for DIN ports
+  std::array<ros::Subscriber, MAX_PORT_NUM> dout_port_subscriber_array_;  // !<@brief ros subscribers array for DOUT ports
 
   // Access handler.
-  DINAccessor din_accessor_;    // !< @brief DIN Accessor.
-  DOUTAccessor dout_accessor_;  // !< @brief DOUT Accessor.
+  std::shared_ptr<DINAccessor> din_accessor_;    // !<@brief DIN Accessor.
+  std::shared_ptr<DOUTAccessor> dout_accessor_;  // !<@brief DOUT Accessor.
+
+  // Diagnostic updater
+  std::shared_ptr<DIO_DiagnosticUpdater> dio_diag_updater_;  // !<@brief DIO's diagnostic updater.
 
   // Variables for parametr.
   double access_frequency_;  // !<@brief pressing period.

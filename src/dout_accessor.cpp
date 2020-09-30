@@ -54,10 +54,20 @@ namespace dio_ros_driver {
    * @retval -1 failed in writing value to port.
    */
   int32_t DOUTAccessor::writePort(const uint16_t &port_id, const bool &port_value) {
-    const bool writing_value = value_inverse_ ^ port_value;
+    // check illegal access to port.
+    if (port_id > dio_port_num_) {
+      setAccessorStatus( ERROR_ACCESSOR_ILLEGAL_PORT_ACCESS);
+      return -1;
+    }
 
-    if (gpiod_line_set_value(dio_ports_set.at(port_id).dio_line_, static_cast<int32_t>(writing_value)) != 0) {
-      setErrorCode((0x0001 << port_id), NOT_SET_LINE_VALUE);
+    // write value to DO port.
+    const bool writing_value = value_inverse_ ^ port_value;
+    dio_port_descriptor &dio_port = dio_ports_set_.at(port_id);
+
+    if (gpiod_line_set_value(dio_port.dio_line_, static_cast<int32_t>(writing_value)) != 0) {
+      setPortStatus(port_id, ERROR_FAILED_SETTING_VALUE_TO_PORT);
+      setAccessorStatus(ERROR_PORT_FAILED_SETTING_VALUE_TO_PORT);
+      
       return -1;
     }
     return 0;
@@ -70,8 +80,9 @@ namespace dio_ros_driver {
    * @retval -1 failed in resetting
    */
   int32_t DOUTAccessor::resetAllPorts(void) {
-    for (uint32_t i = 0; i < getNumOfPorts(); i++) {
+    for (uint32_t i = 0; i < dio_port_num_; i++) {
       if (writePort(static_cast<uint16_t>(i), dout_default_value_) == -1) {
+        setAccessorStatus(ERROR_ACCESSOR_FAILED_IN_RESETTING_DOUT_PORT);
         return -1;
       }
     }
