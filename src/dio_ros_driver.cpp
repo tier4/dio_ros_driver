@@ -144,6 +144,7 @@ void DIO_ROSDriver::terminate(int signal_id) {
   if (dout_accessor_->resetAllPorts() != 0) {
     // reset all dout ports.
     exit_status = -1;
+    dio_diag_updater_->force_update();
     goto CLOSE_DIO_CHIP;
   }
   // release ports
