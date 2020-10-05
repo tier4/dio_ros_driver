@@ -37,20 +37,19 @@ namespace dio_ros_driver {
 class DIO_DiagnosticUpdater {
  public:
   DIO_DiagnosticUpdater(std::shared_ptr<DINAccessor> din_accessor,
-			std::shared_ptr<DOUTAccessor> dout_accessor);  //  !<@brief constructor
+      std::shared_ptr<DOUTAccessor> dout_accessor);  //  !<@brief constructor
   ~DIO_DiagnosticUpdater() {}                                          //  !<@brief destructor
 
   void update(void);         //  !<@brief update diagnosis result.
   void force_update(void);   //  !<@brief force update diagnosis result.
 
-private:
-
+ private:
   // diagnostic member.
   diagnostic_updater::Updater diag_updater_;               // !<@brief wrapped diagnostic updater.
   char hostname_[HOST_NAME_MAX + 1];                       // !<@brief hostname
   std::shared_ptr<DIO_AccessorDiagnosis> din_diagnosis_;   // !<@brief diagnostic object pointer for DINAccessor.
   std::shared_ptr<DIO_AccessorDiagnosis> dout_diagnosis_;  // !<@brief diagnostic object pointer for DOUTAccessor.
 };
-}
+}  // namespace dio_ros_driver
 
 #endif

@@ -40,8 +40,7 @@ DIO_DiagnosticUpdater::DIO_DiagnosticUpdater(std::shared_ptr<DINAccessor> din_ac
 diag_updater_(),
 hostname_(),
 din_diagnosis_(nullptr),
-dout_diagnosis_(nullptr)
-{
+dout_diagnosis_(nullptr) {
   gethostname(hostname_, sizeof(hostname_));
   diag_updater_.setHardwareID(hostname_);
 
@@ -70,5 +69,4 @@ void DIO_DiagnosticUpdater::force_update(void) {
   diag_updater_.force_update();
 }
 
-}
-
+}  // namespace dio_ros_driver

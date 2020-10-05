@@ -80,18 +80,18 @@ typedef struct dio_port_descriptor {
 class DIO_AccessorBase {
  public:
   virtual void initialize(gpiod_chip *const dio_chip_descriptor,
-			  const bool &value_inverse);              // !<@brief initialize for handling DIO port
+        const bool &value_inverse);              // !<@brief initialize for handling DIO port
   bool addPort(const uint16_t &port_offset);                       // !<@brief add port to access
   uint32_t getNumOfPorts(void);                                    // !<@brief getter of port to access
   uint16_t getPortOffset(const uint16_t &port_id);                 // !<brief getter of port offset
   int32_t readPort(const uint16_t &port_id);                       // !<@brief read single DI/DO port
   virtual int32_t writePort(const uint16_t &port_id,
-			    const bool &port_value) = 0;           // !<@brief abstract method of writing port
+                            const bool &port_value) = 0;           // !<@brief abstract method of writing port
   accessor_status getAccessorStatus(void);                         // !<@brief get accessor status and values from all ports
   uint16_t getPortStatus(const uint16_t &port_id);                 // !<@brief get port status
   void releaseAllPorts(void);                                      // !<@brief release all of registered ports
 
-protected:
+ protected:
   DIO_AccessorBase(void);                                               // !<@brief Constructor of DIO Accessor
   virtual int32_t setDirection(const dio_port_descriptor &port) = 0;    // !<@brief abstract method of set direction
   void setAccessorStatus(const uint16_t &status);                       // !<@brief setter of accessor's status

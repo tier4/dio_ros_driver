@@ -109,7 +109,7 @@ void DIO_ROSDriver::run(void) {
     readDINPorts();
     // write data to DOUT ports.
     writeDOUTPorts();
-    // activate diag updater    
+    // activate diag updater.
     dio_diag_updater_->force_update();
     loop_rate.sleep();
   }
@@ -121,7 +121,6 @@ void DIO_ROSDriver::run(void) {
  * @param signal_id signal id which is expected by SIGTERM.
  */
 void DIO_ROSDriver::terminate(int signal_id) {
-
   int32_t exit_status = 0;
 
   // any other thread cannot access dout_accessor_ object.

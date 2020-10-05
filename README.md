@@ -1,14 +1,14 @@
 # dio_ros_driver
 ROS Driver for accessing DIO with libgpiod
 
+----------------------------------
+
 # Overvew
 In the golf-cart project, DIO module is used for several purpose.  
-This system serves DIO ROS driver for at most 8 ports.
+This system has `dio_ros_driver` to communicate DI/DO ports via ROS topic.
 
 `dio_ros_driver` sends topics which includes boolean value read from corresponding DI port.
-It receives topics which includes boolean value and write DO port.
-Topics are allocated to respective port.
-
+`dio_ros_driver` receives topics which request it to set a certain value to a selected port. `dio_ros_driver` sets the value at the port .
 
 ## Execution
 ```
@@ -16,7 +16,7 @@ $ roslaunch dio_ros_driver dio_ros_driver.launch chip_name:="gpiochip0" access_f
 ```
 
 After executing this command, `dio_ros_driver_node` will run without any message.
-You can observe topics such as `/dio/din[0-7]`, and `/dio/dout[0-7]`. `/dio/din[0-7]` and `/dio/dout[0-7]` has boolean value which shows the state of corresponding DI and DO port.   
+You can observe topics such as `/dio/din[0-7]`, and `/dio/dout[0-7]`. `/dio/din[0-7]` have a boolean value read from a corresponding port. On the other hand, `/dio/dout[0-7]` have a boolean value to be written to a corresponding port.
 `dio_ros_driver_node` borrows ROS `diagnostics` framework as diagnostic function, and publishes `/diagnostics` topic.
 
 
@@ -29,7 +29,7 @@ You can observe topics such as `/dio/din[0-7]`, and `/dio/dout[0-7]`. `/dio/din[
   * default value is true because initial value from DO port of ADLINK's MVP-6100 has **1 (true)**
 
 
-**Note:** `dout_value_inverse` option precedes `dout_default_value`.
+**Note:** `dout_value_inverse` option influences on `dout_default_value`.
 The following truth table shows the initial value of DO port according to the combination of `dout_value_inverse` and `dout_default_value`.
 
 | `dout_value_inverse` | `dout_default_value` | DO raw value | DO user value |
@@ -51,6 +51,10 @@ The following truth table shows the initial value of DO port according to the co
 * `/diagnostics`
   * message type: `diagnostic_msgs/DiagnosticArray`
   * description: Diagnostic notification sent at frequency. The notification is provided per a bundle of DI ports and that of DO ports.
+
+## Termination
+If you want to shutdown `dio_ros_node`, you have to send `SIGTERM` signal.
+
 
 
 ## Config file
@@ -78,17 +82,20 @@ dout_ports:
   - 112 # DOUT port 7
 ```
 
-Each offset is assigned to ordering number. This `port_list.yaml` indicates that 0th DI port is corresponded to 72th offset of the DI module.  
+Port offset means the port address shown by `gpioinfo` command. The port offset is associated with the ordering number in the list. For example, this `port_list.yaml` indicates that 0th DI port is corresponded to 72th offset of the DI module.  
 The list is defined based on DIO module coupled with ADLINK's MVP-6100 series.
+
+**Warning:** You have to choose at least a single couple of DI port and DO port.  And, You cannot add more than 8 ports to this list.
 
 ## Constraints
 * This node read data from DI port and write value to DO port periodically. If port value is updated several times in less period than access cycle, the node would use the last value when updating ports.
+* You can add from 1 to 8 ports to access. At least, you have to choose a DI port and DO port.
 
 ## Status code
-Status code is provided to notify the status of `dio_ros_driver_node`. The status code is included in `/diagnostics` topic, and is consumed by `diagnostic aggregator` and `rqt_runtime_monitor`.  
+Status code is provided to notify the status of `dio_ros_driver`. The status code is included in `/diagnostics` topic, and is consumed by `diagnostic aggregator` and `rqt_runtime_monitor`.  
   `rqt_runtime_monitor` shows the status code and update it per period.
 
-Two types of status code is provided: port-bundle-level and port-level. The port-bundle-level status code shows status of whole DI or DO ports. The port-bundle-level status code shows an error if any DIO port has any error. The port-level status code is assigned to each port, and shows each status of port. They are prepared for DI ports and DO ports, respectively. 
+Two types of status code is provided: port-bundle-level and port-level. The port-bundle-level status code shows status of whole DI or DO ports. The port-bundle-level status code is used to notify error if any DIO port has any error. The port-level status code is assigned to each port, and shows each status of port. They are prepared for DI ports and DO ports, respectively. 
 
 The following value table shows port-bundle-level status code.
 The port-bundle-level status code is defined as `uint16_t`.
@@ -110,10 +117,6 @@ The port-bundle-level status code is defined as `uint16_t`.
 | 0x1008            | ERROR    | `dio_ros_driver` failed in setting value to a port. |
 
 
-
-
-
-
 **Warning:** Once any error occurs on any of DI ports, `dio_ros_driver` would not publishing `/dio/din[0-7]` topics. On the other hand, once error occurs on any of DO ports, `dio_ros_driver` would not update DO ports anymore.   
 
 
@@ -132,8 +135,15 @@ Even if one of port has error status, the corresponding port-bundle-level status
 | 0x1004            | ERROR    | undefined port is accessed.  |
 
 
-You can check the status with using `rqt_runtime_monitor` as [the following picture](./design/img/status_monitoring.png).
+You can check the status with using `rqt_runtime_monitor` as the following picture.  
 
+![status_monitoring](./design/image/status_monitoring.png "Status Monitoring")
+
+If one of port bundles suffers from error, `rqt_runtime_monitor` shows error as below.
+
+![error_monitoring](./design/image/error_monitoring.png "Error Monitoring")
+
+----------
 
 # Setup
 ## Prerequisite
@@ -218,11 +228,11 @@ The following table shows relation between port value and polarity.
 | 1          | negative |
 
 
-**Caution:** After startup, initial value would be 1 as negative polarity. It is strongly recommended that **1** should be set on DO ports during shutting down. If inversion option is enabled, **0** must be set.
+**Note:** After startup, initial value would be 1 as negative polarity. It is strongly recommended that **1** should be set on DO ports during shutting down. If inversion option is enabled, **0** must be set.
 
 
 # Design
-Please refer to [class diagram](./design/class.md), [sequence diagram](./design/sequence.md), and [activity diagram](./design/activity.md).
+Please refer to [class diagram](./design/class.md) and [sequence diagram](./design/sequence.md) to understand design overview.
 
 
 

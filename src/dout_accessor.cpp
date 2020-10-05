@@ -54,9 +54,13 @@ namespace dio_ros_driver {
    * @retval -1 failed in writing value to port.
    */
   int32_t DOUTAccessor::writePort(const uint16_t &port_id, const bool &port_value) {
+    if ((accessor_status_.status_ & 0x1000) == 0x1000) {
+      return -1;
+    }
+
     // check illegal access to port.
     if (port_id > dio_port_num_) {
-      setAccessorStatus( ERROR_ACCESSOR_ILLEGAL_PORT_ACCESS);
+      setAccessorStatus(ERROR_ACCESSOR_ILLEGAL_PORT_ACCESS);
       return -1;
     }
 
@@ -67,7 +71,7 @@ namespace dio_ros_driver {
     if (gpiod_line_set_value(dio_port.dio_line_, static_cast<int32_t>(writing_value)) != 0) {
       setPortStatus(port_id, ERROR_FAILED_SETTING_VALUE_TO_PORT);
       setAccessorStatus(ERROR_PORT_FAILED_SETTING_VALUE_TO_PORT);
-      
+
       return -1;
     }
     return 0;

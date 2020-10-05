@@ -32,18 +32,16 @@
 namespace dio_ros_driver {
 
 
-class DIO_AccessorDiagnosis
-{
+class DIO_AccessorDiagnosis {
  public:
-  DIO_AccessorDiagnosis(std::shared_ptr<DIO_AccessorBase> dio_accessor);         //  !<@brief constructor.
-  ~DIO_AccessorDiagnosis(){}                                                     // !<@brief destructor
-  void checkDIOAccessStatus(diagnostic_updater::DiagnosticStatusWrapper &stat);  //  !<@brief accessor's status callback.
+  explicit DIO_AccessorDiagnosis(std::shared_ptr<DIO_AccessorBase> dio_accessor);  //  !<@brief constructor.
+  ~DIO_AccessorDiagnosis() {}                                                       // !<@brief destructor
+  void checkDIOAccessStatus(diagnostic_updater::DiagnosticStatusWrapper &stat);    //  !<@brief accessor's status callback.
 
-private:
-
+ private:
   std::shared_ptr<DIO_AccessorBase> dio_accessor_;   //  !<@brief pointer of DIO_AccessorBase object.
 };
-}
+}  // namespace dio_ros_driver
 
 
 #endif

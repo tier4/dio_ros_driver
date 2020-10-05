@@ -117,9 +117,7 @@ namespace dio_ros_driver {
   uint16_t DIO_AccessorBase::getPortOffset(const uint16_t& port_id) {
     try {
       return dio_ports_set_.at(port_id).port_offset_;
-    }
-    catch (std::out_of_range excep_oor)
-    {
+    } catch (std::out_of_range excep_oor) {
       setAccessorStatus(ERROR_ACCESSOR_ILLEGAL_PORT_ACCESS);
       return 0xFFFF;
     }
@@ -133,6 +131,10 @@ namespace dio_ros_driver {
    */
   int32_t DIO_AccessorBase::readPort(const uint16_t &port_id) {
     int32_t read_value;
+    if ((accessor_status_.status_ & 0x1000) == 0x1000) {
+      return -1;
+    }
+
     if (port_id >= dio_port_num_) {
       setAccessorStatus(ERROR_ACCESSOR_ILLEGAL_PORT_ACCESS);
       return -1;
@@ -175,9 +177,7 @@ namespace dio_ros_driver {
   uint16_t DIO_AccessorBase::getPortStatus(const uint16_t& port_id) {
     try {
       return dio_ports_set_.at(port_id).status_;
-    }
-    catch (std::out_of_range excep_oor)
-    {
+    } catch (std::out_of_range excep_oor) {
       setAccessorStatus(ERROR_ACCESSOR_ILLEGAL_PORT_ACCESS);
       return ERROR_UNDEFINED_PORT_ACCESSED;
     }
@@ -188,7 +188,6 @@ namespace dio_ros_driver {
    * @param[in] status setting status value as uint16_t
    */
   void DIO_AccessorBase::setAccessorStatus(const uint16_t &status) {
-
     const uint16_t current_status_code = accessor_status_.status_;
     if ((current_status_code & 0x1000) == 0x1000) {
       // not update Error status once status is changed into error.
@@ -211,9 +210,7 @@ namespace dio_ros_driver {
         return;
       }
       dio_ports_set_.at(port_id).status_ = status;
-    }
-    catch (std::out_of_range excep_oor)
-    {
+    } catch (std::out_of_range excep_oor) {
       accessor_status_.status_ = ERROR_ACCESSOR_FAILED_IN_RESETTING_DOUT_PORT;
       return;
     }
@@ -225,7 +222,6 @@ namespace dio_ros_driver {
    * @retval no return value
    */
   void DIO_AccessorBase::releaseAllPorts(void) {
-
     for (uint32_t i = 0; i < dio_port_num_; i++) {
       dio_port_descriptor &dio_port = dio_ports_set_.at(i);
       gpiod_line_release(dio_port.dio_line_);

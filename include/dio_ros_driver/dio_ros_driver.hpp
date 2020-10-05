@@ -58,9 +58,9 @@ class DIO_ROSDriver {
  private:
   // callbacks
   void addAccessorPorts(const std::string param_name,
-			std::shared_ptr<DIO_AccessorBase> dio_accessor);           // !<@brief Add ports to given accessor.
+      std::shared_ptr<DIO_AccessorBase> dio_accessor);           // !<@brief Add ports to given accessor.
   void receiveWriteRequest(const dio_ros_driver::DIOPort::ConstPtr &dout_topic,
-			   const uint32_t &port_id);                               // !<@brief receive user write request.
+         const uint32_t &port_id);                               // !<@brief receive user write request.
   void readDINPorts(void);                                                         // !<@brief read all DI port and send them as topics
   void writeDOUTPorts(void);                                                       // !<@brief DO ports by value according to received request
 

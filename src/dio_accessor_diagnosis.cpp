@@ -40,6 +40,11 @@ namespace dio_ros_driver {
 DIO_AccessorDiagnosis::DIO_AccessorDiagnosis(std::shared_ptr<DIO_AccessorBase> dio_accessor) :
   dio_accessor_(dio_accessor) {}
 
+/**
+ * @brief check DIO accessor's status callback
+ * callback of diagnostic updater
+ * check
+ */
 void DIO_AccessorDiagnosis::checkDIOAccessStatus(diagnostic_updater::DiagnosticStatusWrapper &stat) {
   // check dio accessor pointer is not nullptr
   if (dio_accessor_ == nullptr) {
