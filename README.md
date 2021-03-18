@@ -3,16 +3,16 @@ ROS Driver for accessing DIO with libgpiod
 
 ----------------------------------
 
-# Overvew
+# Overview
 In the golf-cart project, DIO module is used for several purpose.  
-This system has `dio_ros_driver` to communicate DI/DO ports via ROS topic.
+This system has `dio_ros_driver` to communicate DI/DO ports via ROS2 topic.
 
 `dio_ros_driver` sends topics which includes boolean value read from corresponding DI port.
 `dio_ros_driver` receives topics which request it to set a certain value to a selected port. `dio_ros_driver` sets the value at the port .
 
 ## Execution
 ```
-$ roslaunch dio_ros_driver dio_ros_driver.launch chip_name:="gpiochip0" access_frequency:=10.0
+$ ros2 launch dio_ros_driver dio_ros_driver.launch.xml
 ```
 
 After executing this command, `dio_ros_driver_node` will run without any message.
@@ -21,23 +21,7 @@ You can observe topics such as `/dio/din[0-7]`, and `/dio/dout[0-7]`. `/dio/din[
 
 
 ## Arguments
-* `chip_name`: to select `gpiodchip[0-9]` in `/dev` directory
-* `access_frequency`: to set access frequency (default: 10.0)
-* `din_value_inverse`: to inverse raw value from DIN port. If this value is true, raw value 0 is converted into value 1 when publishing topic (default: false)
-* `dout_value_inverse`: to inverse raw value from DOUT port. If this value is true, raw value 0 is converted into value 1 when setting value (default: false)
-* `dout_default_value`: initial boolean value for DO ports (default: true)
-  * default value is true because initial value from DO port of ADLINK's MVP-6100 has **1 (true)**
-
-
-**Note:** `dout_value_inverse` option influences on `dout_default_value`.
-The following truth table shows the initial value of DO port according to the combination of `dout_value_inverse` and `dout_default_value`.
-
-| `dout_value_inverse` | `dout_default_value` | DO raw value | DO user value |
-| ---                  | ---                  | ---          | ---           |
-|  0                   | 0                    | 0            | 0             |
-|  0                   | 1                    | 1            | 1             |
-|  1                   | 0                    | 1            | 0             |
-|  1                   | 1                    | 0            | 1             |
+No arguments supported. All parameters will be written in the config file as explained below.
 
 
 
@@ -55,37 +39,46 @@ The following truth table shows the initial value of DO port according to the co
 ## Termination
 If you want to shutdown `dio_ros_node`, you have to send `SIGTERM` signal.
 
-
-
 ## Config file
-In [`port_list.yaml`](./msg/port_list.yaml), port offset is listed as below. 
+Parameters for `dio_ros_driver` is described [`dio_ros_driver.params.yaml`](./config/dio_ros_driver.params.yaml).  
 
 ```
-din_ports:
-  - 72 # DIN port 0
-  - 73 # DIN port 1
-  - 74 # DIN port 2
-  - 75 # DIN port 3
-  - 76 # DIN port 4
-  - 77 # DIN port 5
-  - 78 # DIN port 6
-  - 79 # DIN port 7
-
-dout_ports:
-  - 105 # DOUT port 0
-  - 106 # DOUT port 1
-  - 107 # DOUT port 2
-  - 108 # DOUT port 3
-  - 109 # DOUT port 4
-  - 110 # DOUT port 5
-  - 111 # DOUT port 6
-  - 112 # DOUT port 7
+dio_ros_driver_node:
+  ros__parameters:
+    chip_name: "gpiochip0"
+    access_frequency: 10 # Hz with positive integer.
+    din_value_inverse: false
+    din_port_offset: [72, 73, 74, 75, 76, 77, 78, 79]
+    dout_value_inverse: false
+    dout_default_value: true
+    dout_port_offset: [105, 106, 107, 108, 109, 110, 111, 112]
 ```
 
-Port offset means the port address shown by `gpioinfo` command. The port offset is associated with the ordering number in the list. For example, this `port_list.yaml` indicates that 0th DI port is corresponded to 72th offset of the DI module.  
-The list is defined based on DIO module coupled with ADLINK's MVP-6100 series.
+* `chip_name`: to select `gpiodchip[0-9]` in `/dev` directory
+* `access_frequency`: to set access frequency (default: 10)
+* `din_value_inverse`: to inverse raw value from DIN port. If this value is true, raw value 0 is converted into value 1 when publishing topic (default: false)
+* `din_port_offset`: to correspond DI's port id and port offset 
+* `dout_value_inverse`: to inverse raw value from DOUT port. If this value is true, raw value 0 is converted into value 1 when setting value (default: false)
+* `dout_default_value`: initial boolean value for DO ports (default: true)
+  * default value is true because initial value from DO port of ADLINK's MVP-6100 and MXC-6600 is **1 (true)**
+* `din_port_offset`: to correspond DO's port id and port offset 
+
+
+Port offset means the port address shown by `gpioinfo` command. The port offset is associated with the ordering number in an array. For example, this `din_port_offset` indicates that 0th DI port is corresponded to 72th offset of the DI module.  
+The list is defined based on DIO module coupled with ADLINK's MVP-6100 series as well as ADLINK's MXC-6600 series.
 
 **Warning:** You have to choose at least a single couple of DI port and DO port.  And, You cannot add more than 8 ports to this list.
+
+**Note:** `dout_value_inverse` option influences on `dout_default_value`.
+The following truth table shows the initial value of DO port according to the combination of `dout_value_inverse` and `dout_default_value`.
+
+| `dout_value_inverse` | `dout_default_value` | DO raw value | DO user value |
+| ---                  | ---                  | ---          | ---           |
+|  0                   | 0                    | 0            | 0             |
+|  0                   | 1                    | 1            | 1             |
+|  1                   | 0                    | 1            | 0             |
+|  1                   | 1                    | 0            | 1             |
+
 
 ## Constraints
 * This node read data from DI port and write value to DO port periodically. If port value is updated several times in less period than access cycle, the node would use the last value when updating ports.
@@ -217,8 +210,8 @@ $ roslaunch dio_ros_driver dio_ros_driver.launch
 
 After the command sequence, you can find `dio_ros_driver` node and topics.
 
-## Running `dio_ros_driver` on ADLINK's MVP-6100
-All ports of DIO, served by ADLINK's MVP-6100, has value which is active low.
+## Running `dio_ros_driver` on ADLINK's MVP-6100 and MXC-6600
+All ports of DIO, served by ADLINK's MVP-6100 and MXC-6600, have value which is active low.
 
 The following table shows relation between port value and polarity.
 

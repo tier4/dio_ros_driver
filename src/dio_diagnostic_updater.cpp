@@ -27,6 +27,9 @@
 #include "dio_ros_driver/dio_accessor_diagnosis.hpp"
 #include "dio_ros_driver/din_accessor.hpp"
 #include "dio_ros_driver/dout_accessor.hpp"
+#include "rclcpp/rclcpp.hpp"
+#include <diagnostic_updater/diagnostic_updater.hpp>
+
 
 namespace dio_ros_driver {
 
@@ -36,8 +39,9 @@ namespace dio_ros_driver {
  * @param[in] din_accessor pointer of DIN Accessor.
  * @param[in] dout_accessor pointer of DOUT Accessor.
  */
-DIO_DiagnosticUpdater::DIO_DiagnosticUpdater(std::shared_ptr<DINAccessor> din_accessor, std::shared_ptr<DOUTAccessor> dout_accessor) :
-diag_updater_(),
+DIO_DiagnosticUpdater::DIO_DiagnosticUpdater(std::shared_ptr<rclcpp::Node> node_ptr ,
+                                             std::shared_ptr<DINAccessor> din_accessor, std::shared_ptr<DOUTAccessor> dout_accessor) :
+diag_updater_(node_ptr),
 hostname_(),
 din_diagnosis_(nullptr),
 dout_diagnosis_(nullptr) {
@@ -58,7 +62,7 @@ dout_diagnosis_(nullptr) {
  * update diagnostic status and send topic for diagnosis.
  */
 void DIO_DiagnosticUpdater::update(void) {
-  diag_updater_.update();
+  //diag_updater_.update();
 }
 
 /**

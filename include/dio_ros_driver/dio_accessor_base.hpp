@@ -98,8 +98,8 @@ class DIO_AccessorBase {
   void setPortStatus(const uint16_t &port_id, const uint16_t &status);  // !<@brief setter of port's status
 
   gpiod_chip *dio_chip_descriptor_;                              // !<@brief chip descriptor
-  std::array<dio_port_descriptor, MAX_PORT_NUM> dio_ports_set_;  // !<@brief port list to access
   uint32_t dio_port_num_;                                        // !<@brief the number of ports to access
+  std::array<dio_port_descriptor, MAX_PORT_NUM> dio_ports_set_;  // !<@brief port list to access
   accessor_status accessor_status_;                              // !<@brief ports status
   bool value_inverse_;                                           // !<@brief inverse option
 };

@@ -21,7 +21,7 @@
  * @author Takayuki AKAMINE
  */
 
-#include <diagnostic_updater/diagnostic_updater.h>
+#include <diagnostic_updater/diagnostic_updater.hpp>
 
 #include <memory>
 #include <string>
@@ -48,7 +48,7 @@ DIO_AccessorDiagnosis::DIO_AccessorDiagnosis(std::shared_ptr<DIO_AccessorBase> d
 void DIO_AccessorDiagnosis::checkDIOAccessStatus(diagnostic_updater::DiagnosticStatusWrapper &stat) {
   // check dio accessor pointer is not nullptr
   if (dio_accessor_ == nullptr) {
-    stat.summaryf(diagnostic_msgs::DiagnosticStatus::ERROR, "Not initialized");
+    stat.summaryf(diagnostic_msgs::msg::DiagnosticStatus::ERROR, "Not initialized");
     return;
   }
 
@@ -58,16 +58,16 @@ void DIO_AccessorDiagnosis::checkDIOAccessStatus(diagnostic_updater::DiagnosticS
 
   if ((status_code & 0x1100) == 0x0000) {
     // no error.
-    stat.summaryf(diagnostic_msgs::DiagnosticStatus::OK, "Work fine.");
+    stat.summaryf(diagnostic_msgs::msg::DiagnosticStatus::OK, "Work fine.");
   } else if ((status_code & 0x1000) == 0x1000) {
     // error.
-    stat.summaryf(diagnostic_msgs::DiagnosticStatus::ERROR, "Error! DIO Access is no longer available (status code: 0x%04x)", status_code);
+    stat.summaryf(diagnostic_msgs::msg::DiagnosticStatus::ERROR, "Error! DIO Access is no longer available (status code: 0x%04x)", status_code);
   } else if ((status_code & 0x0100) == 0x0100) {
     // warning.
-    stat.summaryf(diagnostic_msgs::DiagnosticStatus::WARN, "Warning! Some wrong operation (status code: 0x%04x)", status_code);
+    stat.summaryf(diagnostic_msgs::msg::DiagnosticStatus::WARN, "Warning! Some wrong operation (status code: 0x%04x)", status_code);
   } else {
     // unknown error, but not reach unless this program does not bug.
-    stat.summaryf(diagnostic_msgs::DiagnosticStatus::ERROR, "Undefined behavior");
+    stat.summaryf(diagnostic_msgs::msg::DiagnosticStatus::ERROR, "Undefined behavior");
   }
 
   // set user value.

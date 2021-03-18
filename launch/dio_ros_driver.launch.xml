@@ -1,0 +1,10 @@
+<launch>
+  <arg name="config_file" default="$(find-pkg-share dio_ros_driver)/config/dio_ros_driver.params.yaml"/>
+
+  <group>
+    <push-ros-namespace namespace="/dio/"/>
+    <node pkg="dio_ros_driver" exec="dio_ros_driver_node" name="dio_ros_driver_node" output="log" respawn="true">
+      <param from="$(var config_file)"/>
+    </node>
+  </group>
+</launch>

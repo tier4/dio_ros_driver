@@ -21,7 +21,6 @@
  * @author Takayuki AKAMINE
  */
 
-#include <ros/ros.h>
 #include <iostream>
 #include "dio_ros_driver/dio_accessor_base.hpp"
 
@@ -117,7 +116,7 @@ namespace dio_ros_driver {
   uint16_t DIO_AccessorBase::getPortOffset(const uint16_t& port_id) {
     try {
       return dio_ports_set_.at(port_id).port_offset_;
-    } catch (std::out_of_range excep_oor) {
+    } catch (std::out_of_range const &excep_oor) {
       setAccessorStatus(ERROR_ACCESSOR_ILLEGAL_PORT_ACCESS);
       return 0xFFFF;
     }
@@ -177,7 +176,7 @@ namespace dio_ros_driver {
   uint16_t DIO_AccessorBase::getPortStatus(const uint16_t& port_id) {
     try {
       return dio_ports_set_.at(port_id).status_;
-    } catch (std::out_of_range excep_oor) {
+    } catch (std::out_of_range const &excep_oor) {
       setAccessorStatus(ERROR_ACCESSOR_ILLEGAL_PORT_ACCESS);
       return ERROR_UNDEFINED_PORT_ACCESSED;
     }
@@ -210,7 +209,7 @@ namespace dio_ros_driver {
         return;
       }
       dio_ports_set_.at(port_id).status_ = status;
-    } catch (std::out_of_range excep_oor) {
+    } catch (std::out_of_range const &excep_oor) {
       accessor_status_.status_ = ERROR_ACCESSOR_FAILED_IN_RESETTING_DOUT_PORT;
       return;
     }

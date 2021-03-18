@@ -24,9 +24,9 @@
 #ifndef __DIO_ROS_DRIVER_HPP__
 #define __DIO_ROS_DRIVER_HPP__
 
-#include <dio_ros_driver/DIOPort.h>
+#include "rclcpp/rclcpp.hpp"
+#include "dio_ros_driver/msg/dio_port.hpp"
 
-#include <ros/ros.h>
 #include <string>
 #include <cstdint>
 #include <array>
@@ -46,31 +46,30 @@ typedef struct dout_update {
   dout_update(const bool &update_, const bool &value_);
 } dout_update;  // !<@brief indicator of update and value for updating port
 
-class DIO_ROSDriver {
+class DIO_ROSDriver : public rclcpp::Node {
  public:
-  DIO_ROSDriver(const ros::NodeHandle &nh, const ros::NodeHandle &pnh);  // !<@brief Constructor
+  DIO_ROSDriver(const std::string & node_name, const rclcpp::NodeOptions & options);  // !<@brief Constructor
   ~DIO_ROSDriver() {}                                                    // !<@brief Destructor
 
   int init(void);                 // !<@brief DIO Accessor Initialization.
-  void run(void);                 // !<@brief main routine of this node.
+  void update(void);                 // !<@brief main routine of this node.
   void terminate(int singal_id);  // !<@brief terminate processing.
 
  private:
   // callbacks
-  void addAccessorPorts(const std::string param_name,
+  void addAccessorPorts(const std::vector<uint32_t> offset_array,
       std::shared_ptr<DIO_AccessorBase> dio_accessor);           // !<@brief Add ports to given accessor.
-  void receiveWriteRequest(const dio_ros_driver::DIOPort::ConstPtr &dout_topic,
+  void receiveWriteRequest(const dio_ros_driver::msg::DIOPort::SharedPtr &dout_topic,
          const uint32_t &port_id);                               // !<@brief receive user write request.
   void readDINPorts(void);                                                         // !<@brief read all DI port and send them as topics
   void writeDOUTPorts(void);                                                       // !<@brief DO ports by value according to received request
 
-  // Node handler.
-  ros::NodeHandle nh_;   // !<@brief ros node handle.
-  ros::NodeHandle pnh_;  // !<@brief ros node handle.
-
   // Publisher and subscribers.
-  std::array<ros::Publisher, MAX_PORT_NUM> din_port_publisher_array_;     // !<@brief ros publishers array for DIN ports
-  std::array<ros::Subscriber, MAX_PORT_NUM> dout_port_subscriber_array_;  // !<@brief ros subscribers array for DOUT ports
+  std::array<rclcpp::Publisher<dio_ros_driver::msg::DIOPort>::SharedPtr, MAX_PORT_NUM> din_port_publisher_array_;     // !<@brief ros publishers array for DIN ports
+  std::array<rclcpp::Subscription<dio_ros_driver::msg::DIOPort>::SharedPtr, MAX_PORT_NUM> dout_port_subscriber_array_;  // !<@brief ros subscribers array for DOUT ports
+
+  // Timer callback
+  rclcpp::TimerBase::SharedPtr dio_update_timer_;  // !<@brief Timer for DIO update.
 
   // Access handler.
   std::shared_ptr<DINAccessor> din_accessor_;    // !<@brief DIN Accessor.
@@ -80,9 +79,11 @@ class DIO_ROSDriver {
   std::shared_ptr<DIO_DiagnosticUpdater> dio_diag_updater_;  // !<@brief DIO's diagnostic updater.
 
   // Variables for parametr.
-  double access_frequency_;  // !<@brief pressing period.
+  uint32_t access_frequency_;  // !<@brief pressing period.
   std::string chip_name_;    // !<@brief DIO Chip Name
+  std::vector<uint32_t> din_port_offset_;
   bool din_value_inverse_;   // !<@brief DIN value inverse enabler.
+  std::vector<uint32_t> dout_port_offset_;
   bool dout_value_inverse_;  // !<@brief DOUT value inverse enabler.
   bool dout_default_value_;  // !<@brief DOUT defaule value
 
