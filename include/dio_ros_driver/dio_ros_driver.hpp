@@ -26,7 +26,7 @@
 
 #include <dio_ros_driver/DIOPort.h>
 
-#include <ros/ros.h>
+#include "rclcpp/rclcpp.hpp"
 #include <string>
 #include <cstdint>
 #include <array>
