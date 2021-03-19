@@ -24,19 +24,22 @@
 #ifndef __DIO_DIAGNOSTIC_UPDATER_HPP__
 #define __DIO_DIAGNOSTIC_UPDATER_HPP__
 
-#include <diagnostic_updater/diagnostic_updater.h>
+#include <diagnostic_updater/diagnostic_updater.hpp>
 
 #include <memory>
 #include <map>
+#include <climits>
 #include "dio_ros_driver/dio_accessor_diagnosis.hpp"
 #include "dio_ros_driver/din_accessor.hpp"
 #include "dio_ros_driver/dout_accessor.hpp"
+#include "rclcpp/rclcpp.hpp"
 
 namespace dio_ros_driver {
 
 class DIO_DiagnosticUpdater {
  public:
-  DIO_DiagnosticUpdater(std::shared_ptr<DINAccessor> din_accessor,
+  DIO_DiagnosticUpdater(std::shared_ptr<rclcpp::Node> node_ptr,
+      std::shared_ptr<DINAccessor> din_accessor,
       std::shared_ptr<DOUTAccessor> dout_accessor);  //  !<@brief constructor
   ~DIO_DiagnosticUpdater() {}                                          //  !<@brief destructor
 

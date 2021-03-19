@@ -22,7 +22,7 @@
  */
 
 #include <csignal>
-#include "ros/ros.h"
+#include "rclcpp/rclcpp.hpp"
 #include "dio_ros_driver/dio_ros_driver.hpp"
 
 // for terminate signal processing.
@@ -32,18 +32,17 @@ extern "C" void terminate_handler(int signum) {
 }
 
 int main(int argc, char **argv) {
-  ros::init(argc, argv, "dio_ros_driver");
-
-  ros::NodeHandle nh;
-  ros::NodeHandle pnh("~");
+  rclcpp::init(argc, argv);
+  rclcpp::NodeOptions options;
 
   std::shared_ptr<dio_ros_driver::DIO_ROSDriver> dio_ros_driver;
-  dio_ros_driver = std::make_shared<dio_ros_driver::DIO_ROSDriver>(nh, pnh);
+  dio_ros_driver = std::make_shared<dio_ros_driver::DIO_ROSDriver>("dio_ros_driver", options);
   dio_ros_driver_ptr = dio_ros_driver;
   signal(SIGTERM, terminate_handler);
 
   dio_ros_driver->init();
-  dio_ros_driver->run();
+  rclcpp::spin(dio_ros_driver);
+  rclcpp::shutdown();
 
   return 0;
 }

@@ -21,13 +21,11 @@
  * @author Takayuki AKAMINE
  */
 
-#include <dio_ros_driver/DIOPort.h>
-#include <ros/ros.h>
 
 #include <cstring>
 #include <iostream>
 #include <cstdlib>
-#include <boost/bind.hpp>
+#include <chrono>
 
 #include "dio_ros_driver/dio_ros_driver.hpp"
 
@@ -38,45 +36,45 @@ namespace dio_ros_driver {
  * @param nh node handler
  * @param pnh private node handler
  */
-DIO_ROSDriver::DIO_ROSDriver(const ros::NodeHandle &nh, const ros::NodeHandle &pnh)
-    : nh_(nh),
-      pnh_(pnh),
+DIO_ROSDriver::DIO_ROSDriver(const std::string &node_name, const rclcpp::NodeOptions &options)
+    : Node(node_name, options),
       din_port_publisher_array_(),
       dout_port_subscriber_array_(),
       din_accessor_(nullptr),
       dout_accessor_(nullptr),
-      access_frequency_(1.0),
-      chip_name_("chipname0"),
-      din_value_inverse_(false),
-      dout_value_inverse_(false),
-      dout_default_value_(false),
+      access_frequency_(declare_parameter<int>("access_frequency", 1)),
+      chip_name_(declare_parameter<std::string>("chip_name", "gpiochip0")),
+      //din_port_offset_(declare_parameter<std::vector<uint32_t>>("din_port_offset", std::vector<uint32_t>(0))),
+      din_value_inverse_(declare_parameter<bool>("din_value_inverse", false)),
+      //dout_port_offset_(declare_parameter<std::vector<uint32_t>>("dout_port_offset", std::vector<uint32_t>(0))),
+      dout_value_inverse_(declare_parameter<bool>("dout_value_inverse", false)),
+      dout_default_value_(declare_parameter<bool>("dout_default_value", false)),
       write_update_mutex_(),
       dout_user_update_(),
       dio_chip_(nullptr) {
-  // load general parameters.
-  pnh_.param<double>("access_frequency", access_frequency_, 1.0);
-  pnh_.param<std::string>("chip_name", chip_name_, "gpiochip0");
-  pnh_.param<bool>("din_value_inverse", din_value_inverse_, false);
-  pnh_.param<bool>("dout_value_inverse", dout_value_inverse_, false);
-  pnh_.param<bool>("dout_default_value", dout_default_value_, false);
 
   // prepare publishers
   for (uint32_t i = 0; i < MAX_PORT_NUM; i++) {
     std::string topic_name = "/dio/din" + std::to_string(i);
-    din_port_publisher_array_.at(i) = nh_.advertise<dio_ros_driver::DIOPort>(topic_name, 1, false);
+    din_port_publisher_array_.at(i) = this->create_publisher<dio_ros_driver::msg::DIOPort>(topic_name, rclcpp::QoS(1));
   }
   // prepare subscribers
   for (uint32_t i = 0; i < MAX_PORT_NUM; i++) {
     std::string topic_name = "/dio/dout" + std::to_string(i);
-    dout_port_subscriber_array_.at(i) = nh_.subscribe<dio_ros_driver::DIOPort>(topic_name,
-                                                                               1,
-                                                                               boost::bind(&DIO_ROSDriver::receiveWriteRequest, this, _1, i));
+    std::function<void(std::shared_ptr<dio_ros_driver::msg::DIOPort>)> callback = std::bind(&DIO_ROSDriver::receiveWriteRequest, this, std::placeholders::_1, i);
+    dout_port_subscriber_array_.at(i) = this->create_subscription<dio_ros_driver::msg::DIOPort>(topic_name,
+                                                                                                rclcpp::QoS(1),
+                                                                                                callback);
   }
+  // create walltimer callback
+  std::chrono::milliseconds update_cycle = std::chrono::milliseconds(1000U/static_cast<uint32_t>(access_frequency_));
+  dio_update_timer_ = this->create_wall_timer(update_cycle,
+                                              std::bind(&DIO_ROSDriver::update, this));
 
   // initialize accessors and diagnostic updater.
   din_accessor_ = std::make_shared<DINAccessor>();
   dout_accessor_ = std::make_shared<DOUTAccessor>();
-  dio_diag_updater_ = std::make_shared<DIO_DiagnosticUpdater>(din_accessor_, dout_accessor_);
+  dio_diag_updater_ = std::make_shared<DIO_DiagnosticUpdater>(shared_from_this(), din_accessor_, dout_accessor_);
 }
 
 /**
@@ -89,8 +87,8 @@ int DIO_ROSDriver::init(void) {
   din_accessor_->initialize(dio_chip_, din_value_inverse_);
   dout_accessor_->initialize(dio_chip_, dout_value_inverse_, dout_default_value_);
 
-  addAccessorPorts("/dio/din_ports", din_accessor_);
-  addAccessorPorts("/dio/dout_ports", dout_accessor_);
+  addAccessorPorts(din_port_offset_, din_accessor_);
+  addAccessorPorts(dout_port_offset_, dout_accessor_);
 
   return 0;
 }
@@ -99,20 +97,14 @@ int DIO_ROSDriver::init(void) {
  * @brief main routine of this node
  * update DO port and send topic periodically based on given access_frequency
  */
-void DIO_ROSDriver::run(void) {
-  ros::AsyncSpinner spinner(2);
-  spinner.start();
-  ros::Rate loop_rate(access_frequency_);
+void DIO_ROSDriver::update(void) {
 
-  while (ros::ok()) {
-    // read data from DIN ports.
-    readDINPorts();
-    // write data to DOUT ports.
-    writeDOUTPorts();
-    // activate diag updater.
-    dio_diag_updater_->force_update();
-    loop_rate.sleep();
-  }
+  // read data from DIN ports.
+  readDINPorts();
+  // write data to DOUT ports.
+  writeDOUTPorts();
+  // activate diag updater.
+  dio_diag_updater_->force_update();
 }
 
 /**
@@ -163,12 +155,9 @@ CLOSE_DIO_CHIP:
  * @param[in] param_name ROS parameter name to list port id and offset
  * @param[out] dio_accessor dio accessor to update
  */
-void DIO_ROSDriver::addAccessorPorts(const std::string param_name, std::shared_ptr<DIO_AccessorBase> dio_accessor) {
+void DIO_ROSDriver::addAccessorPorts(const std::vector<uint32_t> offset_array, std::shared_ptr<DIO_AccessorBase> dio_accessor) {
   // get port number array.
-  std::vector<int32_t> offset_array;
-  nh_.getParam(param_name, offset_array);
-
-  for (const auto &offset : offset_array) {
+   for (const auto &offset : offset_array) {
     dio_accessor->addPort(offset);
   }
   return;
@@ -179,7 +168,7 @@ void DIO_ROSDriver::addAccessorPorts(const std::string param_name, std::shared_p
  * @param[in] dout_topic topic to update port from application
  * @param[in] port_id targeted port number.
  */
-void DIO_ROSDriver::receiveWriteRequest(const dio_ros_driver::DIOPort::ConstPtr &dout_topic, const uint32_t &port_id) {
+void DIO_ROSDriver::receiveWriteRequest(const dio_ros_driver::msg::DIOPort::SharedPtr &dout_topic, const uint32_t &port_id) {
   write_update_mutex_.lock();
   dout_update &targeted_dout_update = dout_user_update_.at(port_id);
   targeted_dout_update.update_ = true;
@@ -192,13 +181,12 @@ void DIO_ROSDriver::receiveWriteRequest(const dio_ros_driver::DIOPort::ConstPtr 
  * read values from all DI ports and send them as respective topic to application node
  */
 void DIO_ROSDriver::readDINPorts(void) {
-  dio_ros_driver::DIOPort din_port;
-  din_port.header.stamp = ros::Time::now();
+  dio_ros_driver::msg::DIOPort din_port;
   for (uint32_t i = 0; i < din_accessor_->getNumOfPorts(); i++) {
     int32_t read_value = din_accessor_->readPort(i);
     if (read_value >= 0) {
       din_port.value = static_cast<bool>(read_value);
-      din_port_publisher_array_.at(i).publish(din_port);
+      din_port_publisher_array_.at(i)->publish(din_port);
     }
   }
 }
@@ -211,7 +199,7 @@ void DIO_ROSDriver::writeDOUTPorts(void) {
   write_update_mutex_.lock();
   for (uint32_t i = 0; i < dout_accessor_->getNumOfPorts(); i++) {
     if (dout_user_update_.at(i).update_ == true) {
-      int32_t ret_code = dout_accessor_->writePort(i, dout_user_update_.at(i).value_);
+      dout_accessor_->writePort(i, dout_user_update_.at(i).value_);
       dout_user_update_.at(i).update_ = false;
     }
   }

@@ -24,7 +24,7 @@
 #ifndef __DIO_ACCESSOR_DIAGNOSTIC_HPP__
 #define __DIO_ACCESSOR_DIAGNOSTIC_HPP__
 
-#include <diagnostic_updater/diagnostic_updater.h>
+#include <diagnostic_updater/diagnostic_updater.hpp>
 
 #include <memory>
 #include "dio_ros_driver/dio_accessor_base.hpp"
