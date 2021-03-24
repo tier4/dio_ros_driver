@@ -42,16 +42,34 @@ DIO_ROSDriver::DIO_ROSDriver(const std::string &node_name, const rclcpp::NodeOpt
       dout_port_subscriber_array_(),
       din_accessor_(nullptr),
       dout_accessor_(nullptr),
-      access_frequency_(declare_parameter<int>("access_frequency", 1)),
+      dio_diag_updater_(nullptr),
+      access_frequency_(declare_parameter<int64_t>("access_frequency", 1)),
       chip_name_(declare_parameter<std::string>("chip_name", "gpiochip0")),
-      //din_port_offset_(declare_parameter<std::vector<uint32_t>>("din_port_offset", std::vector<uint32_t>(0))),
+      din_port_offset_(),
+      //din_port_offset_(declare_parameter<std::vector<int>>("din_port_offset", std::vector<int>(0))),
       din_value_inverse_(declare_parameter<bool>("din_value_inverse", false)),
-      //dout_port_offset_(declare_parameter<std::vector<uint32_t>>("dout_port_offset", std::vector<uint32_t>(0))),
+      dout_port_offset_(),
+      //dout_port_offset_(declare_parameter<std::vector<int>>("dout_port_offset", std::vector<int>(0))),
       dout_value_inverse_(declare_parameter<bool>("dout_value_inverse", false)),
       dout_default_value_(declare_parameter<bool>("dout_default_value", false)),
       write_update_mutex_(),
       dout_user_update_(),
       dio_chip_(nullptr) {
+
+  // read parameter
+  this->declare_parameter("din_port_offset", std::vector<int64_t>{});
+  this->declare_parameter("dout_port_offset", std::vector<int64_t>{});
+
+  auto tmp_din_offset_list = this->get_parameter("din_port_offset").as_integer_array();
+  for (auto tmp_port_offset : tmp_din_offset_list) {
+    din_port_offset_.push_back(static_cast<uint32_t>(tmp_port_offset));
+  }
+  
+  auto tmp_dout_offset_list = this->get_parameter("dout_port_offset").as_integer_array();
+  for (auto tmp_port_offset : tmp_dout_offset_list) {
+    dout_port_offset_.push_back(static_cast<uint32_t>(tmp_port_offset));
+  }
+
 
   // prepare publishers
   for (uint32_t i = 0; i < MAX_PORT_NUM; i++) {
@@ -74,7 +92,6 @@ DIO_ROSDriver::DIO_ROSDriver(const std::string &node_name, const rclcpp::NodeOpt
   // initialize accessors and diagnostic updater.
   din_accessor_ = std::make_shared<DINAccessor>();
   dout_accessor_ = std::make_shared<DOUTAccessor>();
-  dio_diag_updater_ = std::make_shared<DIO_DiagnosticUpdater>(shared_from_this(), din_accessor_, dout_accessor_);
 }
 
 /**
@@ -89,6 +106,7 @@ int DIO_ROSDriver::init(void) {
 
   addAccessorPorts(din_port_offset_, din_accessor_);
   addAccessorPorts(dout_port_offset_, dout_accessor_);
+  dio_diag_updater_ = std::make_shared<DIO_DiagnosticUpdater>(shared_from_this(), din_accessor_, dout_accessor_);
 
   return 0;
 }
