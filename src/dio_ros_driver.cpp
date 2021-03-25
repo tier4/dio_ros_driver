@@ -176,7 +176,7 @@ CLOSE_DIO_CHIP:
 void DIO_ROSDriver::addAccessorPorts(const std::vector<uint32_t> offset_array, std::shared_ptr<DIO_AccessorBase> dio_accessor) {
   // get port number array.
    for (const auto &offset : offset_array) {
-    dio_accessor->addPort(offset);
+     dio_accessor->addPort(offset);
   }
   return;
 }
