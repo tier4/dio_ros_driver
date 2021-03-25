@@ -6,7 +6,7 @@
 /dio/dio_ros_driver_node:
   ros__parameters:
     chip_name: "gpiochip0"
-    access_frequency: 2 # positive integer.
+    access_frequency: 10 # Hz with positive integer.
     din_value_inverse: false
     din_port_offset: [72, 73, 74, 75, 76, 77, 78, 79]
     dout_value_inverse: false
