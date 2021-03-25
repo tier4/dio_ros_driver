@@ -141,8 +141,8 @@ If one of port bundles suffers from error, `rqt_runtime_monitor` shows error as 
 # Setup
 ## Prerequisite
 System configuration:
-* OS: Ubuntu18.04
-* ROS: ROS Melodic
+* OS: Ubuntu20.04
+* ROS: ROS Foxy
 * Other library: libgpiod
 
 
@@ -156,7 +156,7 @@ What you have to do for using this package is shown as below
 You have to install `libgpiod` package as below before using this package.
 
 ```
-$ sudo apt install libgpiod1 libgpiod-dev libgpiod-doc gpiod
+$ sudo apt install libgpiod2 libgpiod-dev libgpiod-doc gpiod
 ```
 
 After installing all package, you can detect gpio chip as follow.
