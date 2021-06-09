@@ -31,7 +31,6 @@
 #include <cstdint>
 #include <array>
 #include <vector>
-#include <mutex>
 #include <memory>
 
 #include "dio_ros_driver/din_accessor.hpp"
@@ -88,7 +87,6 @@ class DIO_ROSDriver : public rclcpp::Node {
   bool dout_default_value_;  // !<@brief DOUT defaule value
 
   // variable for sharing between callbacks
-  std::mutex write_update_mutex_;                           // !<@brief mutex.
   std::array<dout_update, MAX_PORT_NUM> dout_user_update_;  // !<@brief update list.
   gpiod_chip *dio_chip_;                                    // !<@brief chip descriptor
 };
