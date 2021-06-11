@@ -50,7 +50,6 @@ DIO_ROSDriver::DIO_ROSDriver(const std::string &node_name, const rclcpp::NodeOpt
       dout_port_offset_(),
       dout_value_inverse_(declare_parameter<bool>("dout_value_inverse", false)),
       dout_default_value_(declare_parameter<bool>("dout_default_value", false)),
-      write_update_mutex_(),
       dout_user_update_(),
       dio_chip_(nullptr) {
 
@@ -131,9 +130,6 @@ void DIO_ROSDriver::update(void) {
 void DIO_ROSDriver::terminate(int signal_id) {
   int32_t exit_status = 0;
 
-  // any other thread cannot access dout_accessor_ object.
-  write_update_mutex_.lock();
-
   // check if DIO chip opened
   if (dio_chip_ == nullptr) {
     // do not need to close chip
@@ -185,11 +181,9 @@ void DIO_ROSDriver::addAccessorPorts(const std::vector<uint32_t> offset_array, s
  * @param[in] port_id targeted port number.
  */
 void DIO_ROSDriver::receiveWriteRequest(const dio_ros_driver::msg::DIOPort::SharedPtr &dout_topic, const uint32_t &port_id) {
-  write_update_mutex_.lock();
   dout_update &targeted_dout_update = dout_user_update_.at(port_id);
   targeted_dout_update.update_ = true;
   targeted_dout_update.value_ = dout_topic->value;
-  write_update_mutex_.unlock();
 }
 
 /**
@@ -212,14 +206,12 @@ void DIO_ROSDriver::readDINPorts(void) {
  * update value of DO port according to user's request.
  */
 void DIO_ROSDriver::writeDOUTPorts(void) {
-  write_update_mutex_.lock();
   for (uint32_t i = 0; i < dout_accessor_->getNumOfPorts(); i++) {
     if (dout_user_update_.at(i).update_ == true) {
       dout_accessor_->writePort(i, dout_user_update_.at(i).value_);
       dout_user_update_.at(i).update_ = false;
     }
   }
-  write_update_mutex_.unlock();
 }
 
 
