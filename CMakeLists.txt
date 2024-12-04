@@ -36,6 +36,7 @@ include_directories(
 set(SOURCE_FILES src/dio_ros_driver_node.cpp
                  src/dio_ros_driver.cpp
                  src/dio_accessor_base.cpp
+                 src/dio_deveice_interface.cpp
                  src/din_accessor.cpp
                  src/dout_accessor.cpp
                  src/dio_diagnostic_updater.cpp

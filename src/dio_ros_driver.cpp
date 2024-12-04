@@ -36,10 +36,11 @@ namespace dio_ros_driver {
  * @param nh node handler
  * @param pnh private node handler
  */
-DIO_ROSDriver::DIO_ROSDriver(const std::string &node_name, const rclcpp::NodeOptions &options)
+DIO_ROSDriver::DIO_ROSDriver(const std::string &node_name, const rclcpp::NodeOptions &options, const std::shared_ptr<DIO_DeviceInterface> device_instance)
     : Node(node_name, options),
       din_port_publisher_array_(),
       dout_port_subscriber_array_(),
+      dio_device_(device_instance),
       din_accessor_(nullptr),
       dout_accessor_(nullptr),
       dio_diag_updater_(nullptr),
@@ -96,8 +97,8 @@ DIO_ROSDriver::DIO_ROSDriver(const std::string &node_name, const rclcpp::NodeOpt
                                               std::bind(&DIO_ROSDriver::update, this));
 
   // initialize accessors and diagnostic updater.
-  din_accessor_ = std::make_shared<DINAccessor>();
-  dout_accessor_ = std::make_shared<DOUTAccessor>();
+  din_accessor_ = std::make_shared<DINAccessor>(dio_device_);
+  dout_accessor_ = std::make_shared<DOUTAccessor>(dio_device_);
 }
 
 /**
@@ -106,7 +107,7 @@ DIO_ROSDriver::DIO_ROSDriver(const std::string &node_name, const rclcpp::NodeOpt
  * @retval 0 always 0, but update status topic if any error occur
  */
 int DIO_ROSDriver::init(void) {
-  dio_chip_ = gpiod_chip_open_by_name(chip_name_.c_str());
+  dio_chip_ = this->dio_device_->gpiod_chip_open_by_name(chip_name_.c_str());
   din_accessor_->initialize(dio_chip_, din_value_inverse_);
   dout_accessor_->initialize(dio_chip_, dout_value_inverse_, dout_default_value_);
 
@@ -165,7 +166,7 @@ void DIO_ROSDriver::terminate(int signal_id) {
   exit_status = 0;
 
 CLOSE_DIO_CHIP:
-  gpiod_chip_close(dio_chip_);
+  this->dio_device_->gpiod_chip_close(dio_chip_);
 
   std::exit(exit_status);
 }

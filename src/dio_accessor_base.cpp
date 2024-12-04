@@ -30,8 +30,9 @@ namespace dio_ros_driver {
    * @brief Constructor of DIO Accessor
    * Set initial value on each member
    */
-  DIO_AccessorBase::DIO_AccessorBase(void)
-      : dio_chip_descriptor_(nullptr),
+  DIO_AccessorBase::DIO_AccessorBase(const std::shared_ptr<DIO_DeviceInterface> device_instance)
+      : dio_device_(device_instance),
+        dio_chip_descriptor_(nullptr),
         dio_port_num_(0),
         dio_ports_set_(),
         accessor_status_() {
@@ -77,7 +78,7 @@ namespace dio_ros_driver {
     // get line descriptor from gpiochip.
     dio_port_descriptor &dio_port = dio_ports_set_.at(dio_port_num_);
     dio_port.port_offset_ = port_offset;
-    dio_port.dio_line_ = gpiod_chip_get_line(dio_chip_descriptor_, port_offset);
+    dio_port.dio_line_ = this->dio_device_->gpiod_chip_get_line(dio_chip_descriptor_, port_offset);
 
     // status check
     if (dio_port.dio_line_ == nullptr) {
@@ -141,7 +142,7 @@ namespace dio_ros_driver {
 
     // read value from selected DI/DO port.
     dio_port_descriptor dio_port = dio_ports_set_.at(port_id);
-    read_value = gpiod_line_get_value(dio_port.dio_line_);
+    read_value = this->dio_device_->gpiod_line_get_value(dio_port.dio_line_);
     if (read_value < 0) {
       setPortStatus(port_id, ERROR_FAILED_GETTING_VALUE_FROM_PORT);
       setAccessorStatus(ERROR_PORT_FAILED_GETTING_VALUE_FROM_PORT);
@@ -223,7 +224,7 @@ namespace dio_ros_driver {
   void DIO_AccessorBase::releaseAllPorts(void) {
     for (uint32_t i = 0; i < dio_port_num_; i++) {
       dio_port_descriptor &dio_port = dio_ports_set_.at(i);
-      gpiod_line_release(dio_port.dio_line_);
+      this->dio_device_->gpiod_line_release(dio_port.dio_line_);
     }
     dio_port_num_ = 0;
     return;

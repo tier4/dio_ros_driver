@@ -24,16 +24,14 @@
 #ifndef __DIN_ACCESSOR_HPP__
 #define __DIN_ACCESSOR_HPP__
 
-extern "C" {
-#include <gpiod.h>
-}
 #include <cstdint>
 #include "dio_accessor_base.hpp"
+#include "dio_deveice_interface.hpp"
 
 namespace dio_ros_driver {
 class DINAccessor : public DIO_AccessorBase {
  public:
-  DINAccessor();                                                                         // !<@brief Constructor of DIN Accessor
+  DINAccessor(const std::shared_ptr<DIO_DeviceInterface> device_instance);                // !<@brief Constructor of DIN Accessor
   ~DINAccessor() {}                                                                      // !<@brief Destructor of DIN Accessor
   int32_t writePort(const uint16_t &port_id, const bool &port_value) override;           // !<@brief warn that this accessor for DI port.
 

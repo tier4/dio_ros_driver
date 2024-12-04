@@ -30,7 +30,7 @@ namespace dio_ros_driver {
    * Execute super class's constructor 
    * to initialize member variables
    */
-  DOUTAccessor::DOUTAccessor() : DIO_AccessorBase() {}
+  DOUTAccessor::DOUTAccessor(const std::shared_ptr<DIO_DeviceInterface> device_instance) : DIO_AccessorBase(device_instance) {}
 
   /**
    * @brief initialize DOUT Accessor
@@ -68,7 +68,7 @@ namespace dio_ros_driver {
     const bool writing_value = value_inverse_ ^ port_value;
     dio_port_descriptor &dio_port = dio_ports_set_.at(port_id);
 
-    if (gpiod_line_set_value(dio_port.dio_line_, static_cast<int32_t>(writing_value)) != 0) {
+    if (this->dio_device_->gpiod_line_set_value(dio_port.dio_line_, static_cast<int32_t>(writing_value)) != 0) {
       setPortStatus(port_id, ERROR_FAILED_SETTING_VALUE_TO_PORT);
       setAccessorStatus(ERROR_PORT_FAILED_SETTING_VALUE_TO_PORT);
 
@@ -101,7 +101,7 @@ namespace dio_ros_driver {
   int32_t DOUTAccessor::setDirection(const dio_port_descriptor &port) {
     const bool initial_value = value_inverse_ ^ dout_default_value_;
     std::string port_name = "/dio/dout" + std::to_string(port.port_offset_);
-    return gpiod_line_request_output(port.dio_line_, port_name.c_str(), static_cast<int32_t>(initial_value));
+    return this->dio_device_->gpiod_line_request_output(port.dio_line_, port_name.c_str(), static_cast<int32_t>(initial_value));
   }
 
 }  // namespace dio_ros_driver

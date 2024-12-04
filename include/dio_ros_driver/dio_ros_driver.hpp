@@ -38,6 +38,7 @@
 #include "dio_ros_driver/din_accessor.hpp"
 #include "dio_ros_driver/dout_accessor.hpp"
 #include "dio_ros_driver/dio_diagnostic_updater.hpp"
+#include "dio_ros_driver/dio_deveice_interface.hpp"
 
 namespace dio_ros_driver {
 typedef struct dout_update {
@@ -49,7 +50,7 @@ typedef struct dout_update {
 
 class DIO_ROSDriver : public rclcpp::Node {
  public:
-  DIO_ROSDriver(const std::string & node_name, const rclcpp::NodeOptions & options);  // !<@brief Constructor
+  DIO_ROSDriver(const std::string & node_name, const rclcpp::NodeOptions & options, const std::shared_ptr<DIO_DeviceInterface> device_instance);  // !<@brief Constructor
   ~DIO_ROSDriver() {}                                                    // !<@brief Destructor
 
   int init(void);                 // !<@brief DIO Accessor Initialization.
@@ -76,8 +77,9 @@ class DIO_ROSDriver : public rclcpp::Node {
   rclcpp::TimerBase::SharedPtr dio_update_timer_;  // !<@brief Timer for DIO update.
 
   // Access handler.
-  std::shared_ptr<DINAccessor> din_accessor_;    // !<@brief DIN Accessor.
-  std::shared_ptr<DOUTAccessor> dout_accessor_;  // !<@brief DOUT Accessor.
+  std::shared_ptr<DIO_DeviceInterface> dio_device_;  // !<@brief DIO device(register) accessor
+  std::shared_ptr<DINAccessor> din_accessor_;       // !<@brief DIN Accessor.
+  std::shared_ptr<DOUTAccessor> dout_accessor_;     // !<@brief DOUT Accessor.
 
   // Diagnostic updater
   std::shared_ptr<DIO_DiagnosticUpdater> dio_diag_updater_;  // !<@brief DIO's diagnostic updater.

@@ -24,6 +24,7 @@
 #include <csignal>
 #include "rclcpp/rclcpp.hpp"
 #include "dio_ros_driver/dio_ros_driver.hpp"
+#include "dio_ros_driver/dio_deveice_interface.hpp"
 
 // for terminate signal processing.
 static std::shared_ptr<dio_ros_driver::DIO_ROSDriver> dio_ros_driver_ptr;
@@ -36,7 +37,9 @@ int main(int argc, char **argv) {
   rclcpp::NodeOptions options;
 
   std::shared_ptr<dio_ros_driver::DIO_ROSDriver> dio_ros_driver;
-  dio_ros_driver = std::make_shared<dio_ros_driver::DIO_ROSDriver>("dio_ros_driver", options);
+  std::shared_ptr<dio_ros_driver::DIO_DeviceInterface> dio_device_instance;
+  dio_device_instance = std::make_shared<dio_ros_driver::DIO_Device>();
+  dio_ros_driver = std::make_shared<dio_ros_driver::DIO_ROSDriver>("dio_ros_driver", options, dio_device_instance);
   dio_ros_driver_ptr = dio_ros_driver;
   signal(SIGTERM, terminate_handler);
 

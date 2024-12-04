@@ -24,11 +24,10 @@
 #ifndef __DIO_ACCESSOR_BASE_HPP__
 #define __DIO_ACCESSOR_BASE_HPP__
 
-extern "C" {
-#include <gpiod.h>
-}
 #include <cstdint>
 #include <array>
+#include <memory>
+#include "dio_ros_driver/dio_deveice_interface.hpp"
 
 namespace dio_ros_driver {
 constexpr uint16_t MAX_PORT_NUM = 8;
@@ -92,11 +91,12 @@ class DIO_AccessorBase {
   void releaseAllPorts(void);                                      // !<@brief release all of registered ports
 
  protected:
-  DIO_AccessorBase(void);                                               // !<@brief Constructor of DIO Accessor
-  virtual int32_t setDirection(const dio_port_descriptor &port) = 0;    // !<@brief abstract method of set direction
-  void setAccessorStatus(const uint16_t &status);                       // !<@brief setter of accessor's status
-  void setPortStatus(const uint16_t &port_id, const uint16_t &status);  // !<@brief setter of port's status
+  DIO_AccessorBase(const std::shared_ptr<DIO_DeviceInterface> device_instance); // !<@brief Constructor of DIO Accessor
+  virtual int32_t setDirection(const dio_port_descriptor &port) = 0;     // !<@brief abstract method of set direction
+  void setAccessorStatus(const uint16_t &status);                        // !<@brief setter of accessor's status
+  void setPortStatus(const uint16_t &port_id, const uint16_t &status);   // !<@brief setter of port's status
 
+  std::shared_ptr<DIO_DeviceInterface> dio_device_;               // !<@brief DIO device(register) accessor
   gpiod_chip *dio_chip_descriptor_;                              // !<@brief chip descriptor
   uint32_t dio_port_num_;                                        // !<@brief the number of ports to access
   std::array<dio_port_descriptor, MAX_PORT_NUM> dio_ports_set_;  // !<@brief port list to access

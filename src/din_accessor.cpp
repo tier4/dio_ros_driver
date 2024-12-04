@@ -31,7 +31,7 @@ namespace dio_ros_driver {
    * @brief Constructor of DIN Accessor 
    * call super class's constructor.
    */
-  DINAccessor::DINAccessor(void) : DIO_AccessorBase() {}
+  DINAccessor::DINAccessor(const std::shared_ptr<DIO_DeviceInterface> device_instance) : DIO_AccessorBase(device_instance) {}
 
   /**
    * @brief warn that this accessor for DI port.
@@ -58,7 +58,7 @@ namespace dio_ros_driver {
    */
   int32_t DINAccessor::setDirection(const dio_port_descriptor &port) {
     std::string port_name = "/dio/din" + std::to_string(port.port_offset_);
-    return gpiod_line_request_input(port.dio_line_, port_name.c_str());
+    return this->dio_device_->gpiod_line_request_input(port.dio_line_, port_name.c_str());
   }
 
 }  // namespace dio_ros_driver
